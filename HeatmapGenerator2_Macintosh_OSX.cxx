@@ -187,10 +187,10 @@ void Butt_CB(Fl_Widget*, void*) {
 			myfile << "tiff(outfile , width=20, height=20, units=\"cm\", res=600)\n";
 
 		}
-		myfile << "heatmap.2(genexp, Rowv=NA, Colv=NA, col = colorpanel (256, low=\"" + lowval + "\", high=\"" + highval + "\"), scale=\"row\", margins=c(5,10), cexRow=0.5, cexCol=0.7)\n";
+		myfile << "heatmap.2(genexp, trace=\"none\", dendrogram=\"both\", Rowv=TRUE, Colv=TRUE, col = colorpanel (256, low=\"" + lowval + "\", high=\"" + highval + "\"), scale=\"row\", margins=c(5,10), cexRow=0.5, cexCol=0.7)\n";
 		myfile << "outfile <- \"" + fname + ".jpg\"\n";
 		myfile << "jpeg(outfile , width=20, height=20, units=\"cm\", res=600)\n";
-		myfile << "heatmap.2(genexp, Rowv=NA, Colv=NA, col = colorpanel (256, low=\"" + lowval + "\", high=\"" + highval + "\"), scale=\"row\", margins=c(5,10), cexRow=0.5, cexCol=0.7)\n";
+		myfile << "heatmap.2(genexp, trace=\"none\", dendrogram=\"both\", Rowv=TRUE, Colv=TRUE, col = colorpanel (256, low=\"" + lowval + "\", high=\"" + highval + "\"), scale=\"row\", margins=c(5,10), cexRow=0.5, cexCol=0.7)\n";
 		myfile << "dev.off(which = dev.cur())\n}\nHeatmapGenerator()\nrm(HeatmapGenerator)\n";
 		myfile.close();
 		system("Rscript temp.R");
@@ -483,6 +483,7 @@ style to EXAMPLE.txt (downloaded with this program) \n  #2) Feel free to try EXA
        o->show();
  
 }
+
 
 
 void lowblue(Fl_Widget*, void*)
