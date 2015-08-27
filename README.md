@@ -20,12 +20,12 @@ For more information about HeatmapGenerator, please visit: http://psychiatry.med
 * Windows 64-bit OS >= Windows 7 or XP
 * Linux (currently under development)
 * R programming language
-  * R gplots package must be pre-installed
+  * R `gplots` package must be pre-installed
 
 ## How to run
 
 ##### To compile this source code, do::
-* fltk-config --use-images --use-gl --compile HeatmapGenerator_Macintosh_OSX.cxx
+* `fltk-config --use-images --use-gl --compile HeatmapGenerator_Macintosh_OSX.cxx`
 
 ##### To download the ready-to-use binary executable files::
 * Go to: http://sourceforge.net/projects/heatmapgenerator/
