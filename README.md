@@ -20,7 +20,7 @@ For more information about HeatmapGenerator, please visit: http://psychiatry.med
 * Windows 64-bit OS >= Windows 7 or XP
 * Linux (currently under development)
 * R programming language
-  * R `gplots` package must be pre-installed
+  * R `gplots` package (as well as internal package dependencies: `gtools`, `gdata`, and `caTools`) are automatically installed by HeatmapGenerator3.1
 
 ## How to run
 
