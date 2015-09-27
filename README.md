@@ -16,11 +16,11 @@ For more information about HeatmapGenerator, please visit: http://psychiatry.med
 
 ### Requirements
 
-* Mac OS X >= 10.8 (Mountain Lion)
-* Windows 64-bit OS >= Windows 7 or XP
+* Mac OS X >= 10.8 (Mountain Lion, Mavericks, Yosemite)
+* Windows 64-bit OS >= Windows 7/8 or XP
 * Linux (currently under development)
 * R programming language
-  * R `gplots` package (as well as internal package dependencies: `gtools`, `gdata`, and `caTools`) are automatically installed by HeatmapGenerator3.1
+  * R `gplots` package (as well as internal package dependencies: `gtools`, `gdata`, and `caTools`) are automatically installed by HeatmapGenerator3.1+
 
 ## How to run
 
