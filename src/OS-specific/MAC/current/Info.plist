@@ -1,0 +1,52 @@
+// Copyright (C) 2014-2015 Bohdan Khomtchouk
+
+// This file is part of HeatmapGenerator.
+
+// This XML code contains the necessary ingredients for successfully compiling HeatmapGenerator on Mac OS X and Windows OS.
+
+// BK wishes to acknowledge full financial support by the United States Department of Defense (DoD) through the National Defense Science and Engineering Graduate Fellowship (NDSEG) Program: this research was conducted with Government support under and awarded by DoD, Army Research Office (ARO), National Defense Science and Engineering Graduate (NDSEG) Fellowship, 32 CFR 168a.
+
+// Please cite: "Khomtchouk et al.: HeatmapGenerator: high performance RNAseq and microarray visualization software suite to examine differential gene expression levels using an R and C++ hybrid computational pipeline. Source Code for Biology and Medicine 2014 9:30" within any source that makes use of any methods inspired by HeatmapGenerator.
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+// ------------------------------------------------------------------------------------
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="4.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleName</key>
+	<string>HeatmapGenerator4.0</string>
+	<key>CFBundleIdentifier</key>
+	<string>org.fltk.fltk_images</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>FMWK</string>
+	<key>CFBundleIconFile</key>
+        <string>logo_image.icns</string>
+	<key>CFBundleSignature</key>
+	<string>FLTK</string>
+	<key>CFBundleVersion</key>
+	<string>4.0</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright 2014-2015 Khomtchouk et al.</string>
+	<key>CFBundleGetInfoString</key>
+	<string>Part of the FLTK library. Please visit www.fltk.org.</string>
+</dict>
+	</plist>
