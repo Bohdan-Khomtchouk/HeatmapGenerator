@@ -16,7 +16,7 @@ For more information about HeatmapGenerator, please visit: http://psychiatry.med
 
 ### Requirements
 
-* Mac OS X >= 10.8 (Mountain Lion, Mavericks, Yosemite)
+* Mac OS X >= 10.8 (Mountain Lion, Mavericks, Yosemite, El Capitan)
 * Windows 64-bit OS >= Windows 7/8 or XP
 * Linux (currently under development)
 * R programming language
