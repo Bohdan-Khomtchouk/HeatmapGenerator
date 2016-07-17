@@ -1,3 +1,5 @@
+![hmg_logo](https://cloud.githubusercontent.com/assets/9893806/16899058/9f5dc67c-4bc3-11e6-81cd-66de7a180660.png)
+
 # HeatmapGenerator
 
 ## About
