@@ -2,6 +2,9 @@
 
 # HeatmapGenerator
 
+[![Download HeatmapGenerator](https://img.shields.io/sourceforge/dt/heatmapgenerator.svg)](https://sourceforge.net/projects/heatmapgenerator/files/latest/download)
+[![Download HeatmapGenerator](https://img.shields.io/sourceforge/dm/heatmapgenerator.svg)](https://sourceforge.net/projects/heatmapgenerator/files/latest/download)
+
 ## About
 
 HeatmapGenerator is a graphical user interface software program written in C++, R, and OpenGL to create customized gene expression heatmaps from RNA-seq and microarray data in medical research. HeatmapGenerator can also be used to make heatmaps in a variety of other non-medical fields.
