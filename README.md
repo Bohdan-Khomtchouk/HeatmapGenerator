@@ -5,6 +5,10 @@
 [![Download HeatmapGenerator](https://img.shields.io/sourceforge/dt/heatmapgenerator.svg)](https://sourceforge.net/projects/heatmapgenerator/files/latest/download)
 [![Download HeatmapGenerator](https://img.shields.io/sourceforge/dm/heatmapgenerator.svg)](https://sourceforge.net/projects/heatmapgenerator/files/latest/download)
 
+## Breaking News
+
+HeatmapGenerator is celebrating its 5th anniversary this year (2019).  To commemorate, we are writing a new manuscript entitled _HeatmapGenerator turns 5: celebrating the fifth anniversary of the original heatmap GUI (with a total rewrite!)_ to be submitted for publication to _F1000 Research_.  This rewrite will turn HeatmapGenerator into an awesomely beautiful [Electron app](https://electronjs.org), borrowing some of the incredible user features and lessons we've learned from our past experience designing the world's fastest heatmap software, [shinyheatmap](https://doi.org/10.1371/journal.pone.0176334).  Our goal is to create the world’s most sophisticated heatmap computing infrastructure, brought to you (dear user) from the comfort and security of your own dock/desktop.  Stay tuned for the newly re-engineered HeatmapGenerator ... redesigned for amazing pro features, blazing performance, and a modern native look across all operating systems to elevate and enhance your user experience.  
+
 ## About
 
 HeatmapGenerator is a graphical user interface software program written in C++, R, and OpenGL to create customized gene expression heatmaps from RNA-seq and microarray data in medical research. HeatmapGenerator can also be used to make heatmaps in a variety of other non-medical fields.
@@ -29,10 +33,10 @@ For more information about HeatmapGenerator, please visit: http://psychiatry.med
 
 ## How to run
 
-##### To compile this source code, do::
+##### To compile this source code, enter the following in a command line prompt:
 * `fltk-config --use-images --use-gl --compile HeatmapGenerator_Macintosh_OSX.cxx`
 
-##### To download the ready-to-use binary executable files::
+##### To download the ready-to-use binary executable files:
 * Go to: http://sourceforge.net/projects/heatmapgenerator/
 
 ## Screenshots
