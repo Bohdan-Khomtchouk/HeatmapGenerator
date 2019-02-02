@@ -1,0 +1,86 @@
+<!--
+
+ Copyright (c) 2016 Structured Data, LLC
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to 
+ deal in the Software without restriction, including without limitation the 
+ rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ sell copies of the Software, and to permit persons to whom the Software is 
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in 
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ IN THE SOFTWARE.
+
+-->
+
+<dom-module id="object-details-panel">
+    <template>
+        <style>
+            
+            :host {
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                position: absolute;
+                display: flex;
+                flex-direction: column;
+            }
+        
+            #selected_value {
+                overflow: scroll;
+                flex-grow: 1;
+                position: relative;
+                text-overflow: clip !important;
+            }
+
+            #selected_value:focus {
+                outline: none;
+            }
+            
+        </style>
+
+            <panel-header title="{{header}}"></panel-header>
+            <pre class='fixed-width watch-content' id='selected_value' tabindex="0"><content/></pre>
+        
+    </template>
+    <script>
+        
+        Polymer({
+            
+            is: "object-details-panel",
+        
+            properties: {
+                header: String	
+            },
+        
+            setContent: function(a){
+                while( Polymer.dom(this).children.length ) Polymer.dom(this).removeChild(Polymer.dom(this).children[0]);
+                var X = document.createElement( "span" );
+                if( this.format_value ) this.format_value( a, X );
+                else X.innerText = a;
+                Polymer.dom(this).appendChild(X);	
+            },
+            
+            selectAll: function(){
+                var selection = window.getSelection();        
+                var range = document.createRange();
+                range.selectNodeContents(this.$.selected_value);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+            
+        });
+        
+    </script>
+</dom-module>
+

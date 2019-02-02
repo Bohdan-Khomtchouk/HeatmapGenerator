@@ -1,0 +1,126 @@
+/**
+ * Copyright (c) 2016 Structured Data, LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to 
+ * deal in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ * sell copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+.chooser-list-footer {
+	padding: 1em;
+	flex-grow: 0;
+	position: relative;
+}
+
+.chooser-list-footer {
+	border-top: 1px solid #666;
+}
+
+
+/* ------------------------- */
+
+.chooser-list2 {
+	height: 100%;
+	width: 100%;
+	overflow: auto;
+}
+
+.watch-text {
+	height: 100%;
+	position: absolute;
+	padding: 0 1em 0 1em;
+	cursor: default;
+}
+
+.watch-content {
+	background: #fff;
+	padding: 1em;
+	line-height: 1.4;
+	margin: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+	text-overflow: ellipsis;
+}
+
+/* --- layout specific to mirror chooser ----------------- */
+
+mirror-list-entry > div {
+	padding: 10px 6px 10px 12px;
+}
+
+mirror-list-entry > div:nth-child(2) {
+	padding-left: 0;
+}
+
+.mirror-list-host {
+	font-size: .9em;
+	text-overflow: ellipsis;
+}
+
+/* --- layout specific to package chooser ----------------- */
+
+package-list-entry {
+	padding: 0;
+	white-space: nowrap;
+	padding-left: .5em;
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+package-list-entry[installed] div {
+	opacity: .5;
+}
+
+package-list-entry > div {
+	position: relative;
+	cursor: default;
+	line-height: 1;
+	padding: 12px 4px 12px 8px;
+}
+
+.cran_link, .cran_link:visited, .cran_link:active {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* --- layout specific to preferences ----------------- */
+
+preferences-option, preferences-size, preferences-input, preferences-select {
+	padding: 0;
+	white-space: nowrap;
+	padding-left: .5em;
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+preferences-option > div, preferences-size > div, preferences-input > div, preferences-select > div {
+	position: relative;
+	cursor: default;
+	line-height: 1;
+	padding: 12px 4px 12px 8px;
+}
+
+a.browse {
+	cursor: pointer;
+	line-height: 1;
+	padding: 12px 4px 12px 8px;
+}
+
+
+

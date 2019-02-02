@@ -1,0 +1,36 @@
+
+/** this is a stylesheet injected into R help pages */
+
+html, body {
+	background: #002040 !important; 
+	color: white !important; 
+	font-family: segoe ui;
+	font-size: 15px !important;
+}
+
+body { margin: 1em; }
+
+
+table { 
+	background: inherit;
+}
+
+pre, code {
+	background: #002280;
+	font-family: courier new !important;
+	font-size: 15px;
+	padding-left: .25em;
+	padding-right: .25em;
+}
+
+a {
+	background: inherit !important;
+	color: white !important;
+}
+
+h1, h2, h3, h4 {
+	background: #002040 !important;
+	font-family: inherit !important;
+	color: white !important;
+	font-weight: 600 !important;
+}

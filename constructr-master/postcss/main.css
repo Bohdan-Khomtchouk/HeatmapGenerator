@@ -1,0 +1,291 @@
+/**
+ * Copyright (c) 2016 Structured Data, LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to 
+ * deal in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ * sell copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+@import "checkbox2.css";
+@import "chooser.css";
+@import "panel.css";
+
+@import "textbox.css";
+@import "progress.css";
+@import "button.css";
+@import "dialog.css";
+
+@import "scrollbars.css";
+@import "grid.css";
+@import "locals.css";
+@import "history.css";
+
+html, body {
+	font-family: "Segoe UI", "Open Sans";
+	font-size: 10pt;
+	padding: 0px;
+	margin: 0px;
+	overflow: hidden;
+    height: 100%;
+    width: 100%;
+}
+
+body {
+	top: 0px;
+	bottom: 0px;
+	position: absolute;
+}
+
+body.osx {
+	font-family: "Helvetica Neue";
+}
+
+body.linux {
+	font-family: "Liberation Sans";
+	font-size: 11pt;
+}
+
+body.ubuntu {
+	font-family: "Ubuntu";
+	font-size: 11pt;
+}
+
+#shell-layout {
+	margin: 0;
+	top: 0px;
+	bottom: 0px;
+	left: 0px;
+	right: 0px;
+	position: absolute;
+	opacity: 0;
+}
+
+.CodeMirror, .fixed-width { 
+	font-family: consolas, monospace;
+	font-size: 14.25px;
+	height: 100%;
+}
+
+.linux .CodeMirror, .linux .fixed-width  {
+	font-family: "Liberation Mono";
+}
+
+.ubuntu .CodeMirror, .ubuntu .fixed-width {
+	font-family: "Ubuntu Mono";
+	font-size: 13pt;
+}
+
+.osx .CodeMirror, .osx .fixed-width {
+	font-family: "Menlo";
+	font-size: 13px;
+}
+
+.cm-s-default span.shell-parse-error { color: #ff4f3f !important;  }
+.cm-s-default span.pager { color: #000 !important; }
+.cm-s-default span.shell-piped-stream { color: #000 !important; }
+.cm-s-default span.shell-prompt-debug { color: red; }
+
+/** I just don't like the default */
+.cm-s-default .CodeMirror-matchingbracket { outline:1px solid #ccc; background: #ddd; color:black !important; }
+
+#shell-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+/*
+.shell-parse-error {
+	color: red !important;
+}
+*/
+
+.CodeMirror-hints {
+
+	letter-spacing: .25px;
+	/* font-weight: bold; */
+ 
+	font-family: consolas, "helvetica neue", monospace;
+	font-size: 11px;
+	
+}
+
+/* --- status icon --------------------------------------------------- */
+
+.status-icon {
+	width: 1em;
+	height: 1em;
+	opacity: 0;
+	transition: opacity .2s ease-in-out;
+	border: 0;
+	margin: 0;
+	padding: 0;
+	line-height: 0;
+	font-size: 40px;
+}
+
+.status-overlay {
+	color: black;
+}
+
+.status-icon.busy {
+	opacity: .45;
+	animation: spin 1.8s linear infinite;
+}
+
+@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
+
+.overlay-bottom-right {
+	position: absolute;
+	bottom: 4px;
+	right: 4px;
+	z-index: 9999;
+}
+
+.overlay-bottom-right.scrollbar-offset-x {
+	right: 13px; /* fixme: depends on scrollbar, so use a variable */
+}
+
+.overlay-bottom-right.scrollbar-offset-y {
+	bottom: 13px; /* fixme: depends on scrollbar, so use a variable */
+}
+
+/* --- toolbar ------------------------------------------------------ */
+
+.toolbar {
+	border-bottom: 1px solid #ccc;
+	overflow-x: hidden;
+	display: flex;
+	flex-direction: row;
+	padding: 2px;
+}
+
+.toolbar-btn:focus, .toolbar-btn:active {
+	outline: 0;
+}
+
+.toolbar-btn:active {
+	background-color: #bbb;
+	outline: 0;
+	border: 0;
+}
+
+.toolbar-btn:hover {
+	background-color: #eee;
+	cursor: pointer;
+}
+
+.toolbar-btn {
+	background: none;
+	border: 0;
+	background-color: #fff;
+	color: #666;
+	padding: 0;
+	margin: 2px;
+	padding: 0;
+	outline: 0;
+	border-radius: 3px;
+}
+
+.toolbar-btn i {
+	margin: 2px;
+	padding: 0;
+	outline: 0;
+	display: block;
+}
+
+.toolbar-btn.pull-right {
+	margin-left: auto; /* hooray! */
+}
+
+.btn:disabled {
+	color: #bbb;	
+}
+
+.btn:disabled:hover {
+	background:none;
+	cursor: default;
+}
+
+.toolbar #find-in-browser {
+	position: relative;
+	margin: 2px;
+	margin-top: 4px;
+	background: inherit;
+	margin-left: 1em;
+}
+
+/* --- for inline --- */
+
+.CodeMirror .graphics-device {
+	margin: 1em 1em 1em 1em;
+	border: 1px solid #ccc;
+	width: 576px;
+	height: 360px;
+}
+
+
+/* --- for panel --- */
+graphics-panel .graphics-device {
+	padding: 0;
+	margin: 0;
+}
+
+.panel-graphics-container {
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	bottom: 0px;
+	position: absolute;
+}
+
+/* --- orphans is a block for stuff that's laid out but not displayed --- */
+
+#orphans {
+
+	display: none;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	
+}
+
+/* --- function tips ---------------------------------------------------- */
+
+.cmjs-shell-function-tip-container {
+	position: absolute;
+	z-index: 15;
+	overflow: visible;
+	opacity: 0;
+	transition: opacity .1s;
+}
+
+.cmjs-shell-function-tip {
+	position: relative;
+	transform: translateY(-100%);
+	bottom: .5em;
+	left: -1em;
+	border: 1px solid #ccc;
+	background: rgba( 255, 255, 200, .9 );
+	padding: 2px;
+	border-radius: 2px;
+	box-shadow: 2px 3px 5px rgba(0,0,0,.2);
+}
+
+.cmjs-shell-function-tip-container.visible {
+	opacity: 1;
+}

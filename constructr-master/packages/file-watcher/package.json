@@ -1,0 +1,6 @@
+{
+    "name": "file-watcher",
+    "version": "0.1.0",
+    "main": "file-watcher.js" 
+}
+

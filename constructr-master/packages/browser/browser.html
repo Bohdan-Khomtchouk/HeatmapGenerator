@@ -1,0 +1,193 @@
+<!-- 
+
+ Copyright (c) 2016 Structured Data, LLC
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to 
+ deal in the Software without restriction, including without limitation the 
+ rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ sell copies of the Software, and to permit persons to whom the Software is 
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in 
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ IN THE SOFTWARE.
+
+-->
+
+<dom-module id="browser-component">
+	
+	<template>
+
+		<style>
+			
+			:host {
+				display: flex;
+				flex-direction: column;
+				height: 100%;
+				width: 100%;
+				position: absolute;
+				align-items: stretch
+			}
+			
+			#browser-container {
+				flex-grow: 1;
+				position: relative;
+			}
+
+			#browser-toolbar {
+				background: #fff;
+			}
+			
+			#browser-status-bar {
+				position: absolute;
+				z-index: 2;
+				bottom: 0;
+				left: 0;
+				background: #eee;
+				color: #333;
+				padding: .15em .6em .4em .6em;
+				border-color: #bce;
+				border-style: solid;
+				border-top-right-radius: 3px;
+				border-width: 1px 1px 0 0;
+				opacity: 0;
+				transition: opacity .3s;
+			}
+
+			#view {
+				top: 0px;
+				bottom: 0px;
+				position: absolute;
+				width: 100%;
+			}
+			
+		</style>
+
+		<div id='browser-toolbar' class='toolbar'>
+			<button title='Back' class='btn toolbar-btn cmd-browser-back ' id='back-button' on-click='back' disabled='true'><i class="material-icons">keyboard_arrow_left</i></button>
+			<button title='Forward' class='btn toolbar-btn cmd-browser-fwd ' id='fwd-button' on-click='forward' disabled='true'><i class="material-icons">keyboard_arrow_right</i></button>
+			<button title='Reload' class='btn toolbar-btn cmd-browser-reload ' id='reload-button' on-click='reload' disabled='true'><i class="material-icons">refresh</i></button>
+			<button title='Open in desktop browser' class='btn toolbar-btn cmd-browser-open-in-new' on-click='open_external' ><i class="material-icons">open_in_new</i></button>
+			<input type='text' id='find-in-browser' on-keypress='find_keypress' on-input='find' placeholder='Find'/>
+			<button title='Next' class='btn toolbar-btn cmd-browser-find-next' id='find_next' on-click='find_next' disabled='true'><i class="material-icons">keyboard_arrow_right</i></button>
+			<button title='Close' class='btn toolbar-btn cmd-browser-close pull-right' on-click='close'><i class="material-icons">close</i></button>
+		</div>
+		
+		<div id='browser-container'>
+			<webview id='view' on-load-commit='load_commit' plugins nodeintegration></webview>
+			<div id='browser-status-bar'>Ready</div>
+		</div>
+					
+	</template>
+	
+	<script>
+(function(){
+
+	// var open = require( "open" );
+	
+	Polymer({
+		
+		is: "browser-component",
+
+		findtext: "",
+		
+		inject_stylesheet: function( sheet ){
+			
+			if( !this.cache ) throw( "Missing dependency" ); 
+			
+			var view = this.$.view;
+			this.cache.ensure( sheet ).then( function( contents ){
+				if( contents ){
+					contents = contents.replace( /[\n\r]/g, ' ' );
+					view.insertCSS( contents );
+				}
+			});
+		},
+				
+		open: function(url){
+			//if( !this.$.view.hasAttribute( "src" ))
+				this.$.view.setAttribute( "src", url );
+			//else this.$.view.loadURL( url );
+		},
+		
+		close: function(e){
+			e.stopPropagation();
+			this.fire( "close", null );
+		},
+		
+		update_button_state: function(){
+			this.$['back-button'].disabled = !this.$.view.canGoBack();	
+			this.$['fwd-button'].disabled = !this.$.view.canGoForward();	
+			this.$['reload-button'].disabled = !this.$.view.getURL();	
+		},
+		
+		open_external: function(e){
+			e.stopPropagation();
+			// open( view.getAttribute( "src" ));	
+			require('electron').shell.openExternal(view.getAttribute( "src" ));
+		},
+		
+		back: function(e){
+			e.stopPropagation();
+			this.$.view.goBack();
+		},
+
+		forward: function(e){
+			e.stopPropagation();
+			this.$.view.goForward();
+		},
+		
+		reload: function(e){
+			e.stopPropagation();
+			this.$.view.reload();
+		},
+		
+		find_keypress: function(e){
+			if( e.keyCode == 13 ){
+				this.find_next(e);
+				return;
+			}
+		},
+		
+		find: function(e){
+			e.stopPropagation();
+			this.findtext = e.target.value.trim();
+			this.$.view.stopFindInPage( 'clearSelection' );
+			if( this.findtext.length !== 0 ){
+				this.$.view.findInPage( this.findtext );
+				this.$.find_next.disabled = false;
+			}
+			else this.$.find_next.disabled = true;
+		},
+		
+		find_next: function(e){
+			e.stopPropagation();
+			this.$.view.stopFindInPage( 'keepSelection' );
+			this.$.view.findInPage( this.findtext, { findNext: true, forward: !e.shiftKey } );
+		},
+		
+		load_commit: function(e){
+
+			this.update_button_state();
+			
+			// doesn't bubble by default? ... TODO: check polymer
+			this.fire( "load-commit", e );
+		}
+		
+		
+	});
+	
+})();
+	
+	</script>
+
+</dom-module>
+

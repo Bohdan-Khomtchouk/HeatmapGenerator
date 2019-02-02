@@ -1,0 +1,53 @@
+{
+    "name": "graphics",
+    "version": "0.1.1",
+    "main": "graphics-device.js",
+    "htmlComponents": [
+        "graphics-panel.html"
+    ],
+    "preferences": {
+        "save.graphics.data": {
+            "type": "boolean",
+            "default": true,
+            "label": "Save graphics data" 
+        }
+    },
+    "preferenceGroups": {
+        "Graphics Target": {
+            "graphics.target": {
+                "type": "choice",
+                "options": "get_graphics_targets",
+                "label": "", 
+                "default": "inline" 
+            }
+        },
+        "Inline Graphics Size": {
+            "inline.graphics.size": {
+                "type": "size",
+                "default": { "width": 600, "height": 400 },
+                "min": { "width": 50, "height": 50 }
+            }
+        },
+        "Graphics Font Mapping": {
+            "font.map.sans": {
+                "type": "input",
+                "placeholder": "sans-serif",
+                "default.win32": "Segoe UI",
+                "default.darwin": "Helvetica Neue"
+            },
+            "font.map.serif": {
+                "type": "input",
+                "placeholder": "serif",
+                "default.win32": "Palatino",
+                "default.darwin": "Georgia"
+            },
+            "font.map.mono": {
+                "type": "input",
+                "placeholder": "monospace",
+                "default.win32": "Consolas",
+                "default.darwin": "Menlo"
+            }
+        }
+    }
+}
+

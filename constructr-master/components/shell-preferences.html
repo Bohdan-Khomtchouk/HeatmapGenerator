@@ -1,0 +1,414 @@
+<!-- 
+
+ Copyright (c) 2016 Structured Data, LLC
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to 
+ deal in the Software without restriction, including without limitation the 
+ rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ sell copies of the Software, and to permit persons to whom the Software is 
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in 
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ IN THE SOFTWARE.
+
+-->
+
+
+<!-- 
+	size chooser (w x h)
+  -->  
+<dom-module id="preferences-size">
+	<template>
+		
+		<style>
+			input[err=true] {
+				background: lightpink;
+			}
+		</style>
+		
+		<div>
+			<span>Size (pixels): &nbsp;</span>
+			<span>
+				<input on-change='_change' class='size-width' type='text' value='{{width::input}}' size='4' id='width'> x 
+				<input on-change='_change' class='size-height' type='text' value='{{height::input}}' size='4' id='height'>
+			</span>
+		</div>
+		
+	</template>
+	
+	<script>
+		Polymer({
+			is: "preferences-size",
+			properties: {
+				err: Boolean,
+				min: Number,
+				width: {
+					type: Number,
+					observer: '_check'
+				},
+				height: {
+					type: Number,
+					observer: '_check'
+				}
+			},
+			_check: function(){
+				this.$.width.setAttribute( "err", this.width < 50 );
+				this.$.height.setAttribute( "err", this.height < 50 );
+				this.err = ( this.width < 50 || this.height < 50 );
+			},
+			_change: function(e){
+				e.stopPropagation();
+				e.preventDefault();
+				if( !this.err ) this.fire( "change", { width: Number(this.width), height: Number(this.height) });
+			}
+		});
+	</script>
+	
+</dom-module>
+
+<!-- 
+	single option, either checkbox or radio
+  -->
+<dom-module id="preferences-option">
+
+	<template>
+		
+		<style>
+			:host {
+				display: flex;
+			}
+			
+			:host div {
+				cursor: default;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+			
+		</style>
+		
+		<template is="dom-if" if="{{!radio}}">
+			<!-- <div id='check' class='chooser-checkbox'></div> -->
+			<input type='checkbox' checked='{{checked}}'></input>
+		</template>
+		
+		<template is="dom-if" if="{{radio}}">
+			<input type='radio' checked='{{checked}}'></input>
+		</template>
+		
+		<div>{{label}}</div>
+		
+	</template>
+
+	<script>
+
+		/**
+		 * instead of using DI here we are expecting a global
+		 * Settings object.  still testing this pattern.
+		 */
+		
+		PreferencesOption = Polymer({
+			is: "preferences-option",
+			properties: {
+				index: {
+					type: Number,
+					reflectToAttribute: true
+				},
+				checked: {
+					type: Boolean,
+					observer: '_checkChange'
+				},
+				radio: {
+					type: Boolean,
+					value: false
+				},
+				label: String,
+				setting: String,
+				invert: Boolean,
+				key: String
+			},
+			listeners: {
+				'click': 'click'
+			},
+			click: function(e){
+				e.stopPropagation();
+				e.preventDefault();
+				if( !this.radio ) this.checked = !this.checked;
+			},
+			_checkChange: function(){
+				this.fire( "change", this.key );
+				if( this.setting ){
+					this.Settings[ this.setting ] = this.invert ? !this.checked : this.checked ;
+				}
+			},
+			
+			factoryImpl: function( obj ){
+				this.Settings = obj.Settings;
+				for( var key in obj ) this[key] = obj[key];
+				if( obj.className ) this.classList.add( obj.className );
+				if( obj.setting ){
+					var val = !!this.Settings[obj.setting];
+					this.checked = obj.invert ? !val : val;
+				}
+			}
+			
+		});
+		
+	</script>
+	
+</dom-module>
+
+<dom-module id="preferences-select">
+	<template>
+		<style>
+			
+			:host div {
+				cursor: default;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+
+			:host select {
+                margin-left: 1em;
+            }
+             
+		</style>
+		
+        <div>{{label}}</div>
+        <select value={{selectedvalue}} on-change="change">
+            <template is="dom-repeat" items={{options}}>
+                <option>{{item}}</option>
+            </template>
+        </select>
+        
+	</template>
+    
+    <script>
+		PreferencesSelect = Polymer({
+			is: "preferences-select",
+			properties: {
+				label: String,
+                setting: String,
+                value: String,
+                selectedvalue: String,
+                options: Array
+			},
+            change: function(e){
+                if( this.setting ){
+                    this.Settings[ this.setting ] = e.target.value ;
+                }
+            },
+            attached: function(){
+                if( this.value ){
+                    this.selectedvalue = this.value;  
+                }
+            },
+            factoryImpl: function( obj ){
+				this.Settings = obj.Settings;
+				for( var key in obj ) this[key] = obj[key];
+				if( obj.className ) this.classList.add( obj.className );
+			}
+
+        });
+    </script>
+    
+</dom-module>
+
+<dom-module id="preferences-input">
+	
+	<template>
+		<style>
+			:host>div {
+				width: 100%;
+			}
+			input {
+				max-width: 20em;
+				width: 90%;
+				border: 3px solid orange;
+				text-overflow: ellipsis;
+			}
+		</style>
+		
+		<div>
+			<input on-change='change' type='text' value='{{value::input}}' placeholder='{{placeholder}}' id='input-value'>
+			<template is="dom-if" if="{{file}}">
+				<a class='browse' title='Browse' on-click='browse'>...</a>
+			</template>
+		</div>
+		
+	</template>
+	
+	<script>
+		PreferencesInput = Polymer({
+			is: "preferences-input",
+			properties: {
+				placeholder: String,
+				value: String,
+				setting: String,
+				file: Boolean
+			},
+			set_value: function(val){
+				this.value = val;
+				this.change();	
+			},
+			change: function(e){
+				if( this.setting ) this.Settings[ this.setting ] = this.value.toString() ;
+				this.fire( 'change' );
+			},
+			browse: function(){
+				// we call (event) the owner here b/c we don't want to include this dep
+				this.fire( 'browse' );
+			},
+			attached: function(){
+				if( this.setting && !this.value ){
+					this.value = this.Settings[this.setting];
+				}
+			},
+			factoryImpl: function( obj ){
+				this.Settings = obj.Settings;
+				for( var key in obj ) this[key] = obj[key];
+				if( obj.className ) this.classList.add( obj.className );
+			}
+		});	
+	</script>
+	
+</dom-module>
+
+
+<dom-module id="preferences-choice">
+	<template>
+		
+		<template id='repeated' is="dom-repeat" items="{{choices}}">
+			<preferences-option radio class='list-entry' on-change="squelch" on-click="click" label="{{item.label}}" index="{{index}}" soup="{{soup}}" checked="{{item.checked}}"/>
+		</template>
+		
+	</template>
+	<script>
+		PreferencesChoice = Polymer({
+			is: "preferences-choice",
+			properties: {
+				choices: {
+					type: Array,
+					observer: '_updateChecks'
+				},
+				selected: {
+					type: Number,
+					value: 0,
+					observer: '_updateChecks'
+				}
+			},
+			_updateChecks: function(){
+				if( !this.choices ) return;
+				for( var i = 0; i< this.choices.length; i++ ){
+					//this.set( `choices.${i}.checked`, this.selected === i );
+					this.set( "choices." + i + ".checked", this.selected === i );
+				}
+			},
+			squelch: function(e){
+				e.stopPropagation();	
+			},
+			click: function(e){
+				e.stopPropagation();
+				e.preventDefault();
+				if( this.selected !== e.model.index ){
+					this.selected = e.model.index;
+					this.fire( 'change', this.choices[this.selected] );
+				}
+			}
+		});
+	</script>
+</dom-module>
+
+<dom-module id="preferences-group">
+
+	<template>
+		<template is="dom-if" if="{{header}}">
+			<div class='list-header'>
+				{{header}}
+			</div>
+		</template>
+		<content/>
+	</template>
+
+	<script>
+		Polymer({
+			is: "preferences-group",
+			properties: {
+				header: String
+			},
+			appendChild: function(c){
+				Polymer.dom(this).appendChild(c);
+			}
+		});
+	</script>
+	
+</dom-module>
+
+<dom-module id="shell-preferences">
+
+	<template>
+
+		<style>
+			
+			:host > div {	
+				display: flex;
+				flex-direction: column;
+				top: 0px;
+				left: 0px;
+				right: 0px;
+				bottom: 0px;
+				position: absolute;
+			}
+
+			.panel-content {
+				flex-grow: 1;
+				overflow: auto
+			}
+
+			
+		</style>
+
+		<div>
+
+			<!--
+			<div class='list-header'>
+				Shell Preferences
+				<button class='panel-close-box' id='close'><i class="material-icons">close</i></button>
+			</div>
+			-->
+			<panel-header title='Shell Preferences'></panel-header>
+			
+			<div class='panel-content'>
+				<content id='content'/>
+			</div>
+			
+			<div class='panel-footer centered' ref='footer'>
+				<button class='panel-button' id='cancel'>Close</button>			
+			</div>
+	
+		</div>
+			
+	</template>
+	<script>
+
+	Polymer({
+		is: "shell-preferences",
+		appendChild: function(c){
+			Polymer.dom(this).appendChild(c);
+		}
+	});
+
+	</script>
+	
+</dom-module>
+	

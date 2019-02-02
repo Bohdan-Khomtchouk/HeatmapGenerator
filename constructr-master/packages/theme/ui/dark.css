@@ -1,0 +1,194 @@
+
+/* --- panel and lists ------------------------- */
+
+.panel {
+	background: #222;
+	color: #fff;
+}
+
+.panel input[type=text] {
+	background: #eee;
+}
+
+.panel .list-entry {
+	background: #444;
+}
+
+.panel .list-entry:nth-child(even) {
+	background: #333;
+}
+
+.panel .list-header, panel-header a {
+	color: rgb(255, 207, 108);
+}
+
+.panel .sub-header {
+	color: #bbb;
+}
+
+.watch-content {
+	background: #333;
+}
+
+.panel-content-header-temp {
+	color: #fff;
+}
+
+/* --- scrollbars ------------------------------ */
+
+.panel ::-webkit-scrollbar-track
+{
+	background: rgba(255, 255, 255, 0.125);
+}
+
+.panel ::-webkit-scrollbar-thumb
+{
+	background: rgba(255, 255, 255, 0.5);
+}
+
+.panel ::-webkit-scrollbar-corner, {
+	background: rgba(255, 255, 255, 0.125);
+}
+
+
+/* --- buttons --------------------------------- */
+
+panel-header button {
+	border: 1px solid #222;
+	color: #888;
+}
+
+panel-header button:hover {
+	color: #aaa;
+	background: #444;
+}
+
+
+/*
+button.close-panel.panel-close-box {
+	border: 1px solid #222;
+	color: #888;
+}
+
+button.close-panel.panel-close-box:hover {
+	color: #aaa;
+	background: #444;
+}
+button.close-panel.panel-close-box:active {
+}
+*/
+
+.panel-footer {
+	border-top: 1px solid #666;
+}
+
+.panel-footer button {
+	background: #333;
+	color: #fff;
+	border-color: #555;
+}
+
+.panel-footer button:hover {
+	background: #222;
+}
+
+.panel-footer button:active {
+	background: #444;
+}
+			
+/* --- checkbox and radio ---------------------- */
+
+input[type=checkbox], input[type=radio] {
+	color: rgb(0, 168, 198);
+}
+
+input[type=checkbox]:disabled, input[type=radio]:disabled {
+	color: rgb(0, 168, 198);
+}
+
+/* --- inputs ---------------------------------- */
+
+input[type=text]{
+	background: rgba( 255,255,255,.125 ) !important;
+	border-color: #333;
+	color: #fff;
+}
+
+/* --- dialog ---------------------------------- */
+
+html-dialog .dialog-chrome {
+	background: #333;
+	border: 1px solid #666;
+	color: #fff;
+}
+
+html-dialog input, html-dialog select {
+	background: #eee;
+}
+
+html-dialog .dialog-header {
+	color: rgb(255, 207, 108);
+	border-bottom: 1px solid #666;
+}
+
+html-dialog .dialog-header button {
+	border: 1px solid #222;
+	color: #888;
+}
+
+html-dialog .dialog-header button:hover {
+	color: #aaa;
+	background: #444;
+}
+
+html-dialog .dialog-footer {
+	border-top: 1px solid #666;
+}
+
+html-dialog .dialog-footer button {
+	background: #333;
+	color: #fff;
+	border-color: #555;
+}
+
+html-dialog .dialog-footer button:hover {
+	background: #222;
+}
+
+html-dialog .dialog-footer button:active {
+	background: #444;
+}
+
+/* --- grid (needs work) ---*/
+
+display-grid {
+    background: #222;
+}
+
+display-grid grid-row {
+    background: #666;    
+}
+
+display-grid .grid-cell {
+	background: #444;
+}
+
+display-grid .grid-header {
+	background: #333;
+}
+
+display-grid .grid-cell.selected {
+	border-color: rgba(0,0,0,0);
+	background: #888;
+}
+
+display-grid .grid-header.selected {
+	border-color: rgba( 0,0,0,0 );
+	background: #eee;
+	color: #000;
+}
+
+/* alternate rows, except for selection */
+display-grid grid-row:nth-child(odd) .table-cell:not(.selected) {
+    background: #333;
+}
