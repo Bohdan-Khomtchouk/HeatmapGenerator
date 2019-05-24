@@ -1,0 +1,102 @@
+{
+  "name": "HeatmapGenerator",
+  "productName": "HeatmapGenerator",
+  "version": "1.0.0",
+  "description": "An Electron application version of HeatmapGenerator (github.com/Bohdan-Khomtchouk/HeatmapGenerator), made using github.com/dirkschumacher/r-shiny-electron",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "eslint src --color",
+    "pack": "build --dir",
+    "dist": "build",
+    "postinstall": "install-app-deps"
+  },
+  "build": {
+    "appId": "yourappid",
+    "category": "your.app.category.type",
+    "dmg": {
+      "contents": [
+        {
+          "x": 110,
+          "y": 150
+        },
+        {
+          "x": 240,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "win": {
+      "target": "squirrel",
+      "icon": "build/icon.ico"
+    }
+  },
+  "keywords": [],
+  "author": "You",
+  "license": "MIT",
+  "private": true,
+  "config": {
+    "forge": {
+      "make_targets": {
+        "win32": [
+          "squirrel"
+        ],
+        "darwin": [
+          "zip"
+        ]
+      },
+      "electronPackagerConfig": {
+        "packageManager": "npm",
+        "afterCopy": [
+          "./prune-r"
+        ]
+      },
+      "electronWinstallerConfig": {
+        "name": "r_shiny_electron"
+      },
+      "electronInstallerDebian": {},
+      "electronInstallerRedhat": {},
+      "github_repository": {
+        "owner": "githubusername",
+        "name": "r-shiny-electron"
+      },
+      "windowsStoreConfig": {
+        "packageName": "",
+        "name": "rshinyelectron"
+      }
+    }
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "electron-compile": "^6.4.3",
+    "electron-squirrel-startup": "^1.0.0",
+    "execa": "^0.10.0"
+  },
+  "devDependencies": {
+    "babel-plugin-transform-async-to-generator": "^6.24.1",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-react": "^6.24.1",
+    "electron": "latest",
+    "electron-builder": "latest",
+    "electron-forge": "^5.2.2",
+    "electron-packager": "^13.1.1",
+    "electron-prebuilt-compile": "2.0.4",
+    "eslint": "^3.19.0",
+    "eslint-config-airbnb": "^15.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jsx-a11y": "^5.1.1",
+    "eslint-plugin-react": "^7.11.1",
+    "fs-extra": "^7.0.0"
+  }
+}
