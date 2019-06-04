@@ -3,7 +3,10 @@ library(data.table)
 library(gplots)
 library(heatmaply)
 library(tools)
-
+# library(BiocManager)
+library(devtools)
+library(ComplexHeatmap)
+install_github("jokergoo/ComplexHeatmap")
 
 shinyApp(
   shinyUI(
@@ -56,6 +59,9 @@ shinyApp(
 
 
   shinyServer(function(input, output) {
+      
+    # install_github("jokergoo/ComplexHeatmap")
+    # BiocManager::install("ComplexHeatmap", type="source")
 
     # sample file download (small dataset)
     output$downloadSmallData <- downloadHandler(
@@ -109,6 +115,12 @@ shinyApp(
       genexp_df_mat <<- data.matrix(genexp_df[-1])  ## make global for clusteredInput() function
       k <- NCOL(genexp_df_mat)
       row.names(genexp_df_mat) <<- names_genexp_df  ## make global for clusteredInput() function
+      if (input$scale == "column") {
+        genexp_df_mat = scale(genexp_df_mat)
+      }
+      if (input$scale == "row") {
+        genexp_df_mat = t(scale(t(genexp_df_mat)))
+      }
       if (n > 2000) {
         output$image <- renderUI({
           tags$img(src = "https://cloud.githubusercontent.com/assets/9893806/19628924/44e7168c-9937-11e6-9808-89452fbdd62d.png")
@@ -117,19 +129,15 @@ shinyApp(
         output$sorry <- renderUI({tagList("You are using an input dataset with", n, "rows and", k, "columns.  Please use our high-performance computing server", "for visualizing such large datasets:", url)})
       }
       else {
-        heatmap.2(
-          genexp_df_mat,
-          trace = input$trace,
-          scale = input$scale,
-          dendrogram = input$dendrogram,
-          distfun = function(x) dist(x, method = input$distanceMethod),
-          hclustfun = function(x) hclust(x, method = input$agglomerationMethod),
-          key = input$key,
-          cexRow = as.numeric(as.character(input$xfontsize)),
-          cexCol = as.numeric(as.character(input$yfontsize)),
-          Rowv = if (input$dendrogram == "both" | input$dendrogram == "row") TRUE else FALSE,
-          Colv = if (input$dendrogram == "both" | input$dendrogram == "column") TRUE else FALSE,
-          col = if (input$midColor == "none") colorpanel(256, low = input$lowColor, high = input$highColor) else colorpanel(256, low = input$lowColor, mid = input$midColor, high = input$highColor)
+        Heatmap(matrix = genexp_df_mat,
+                col = colorpanel(256, low = input$lowColor, high = input$highColor),
+                clustering_distance_rows = function(x) dist(x, method = input$distanceMethod),
+                row_title_gp = gpar(fontsize = 14),
+                column_title_gp = gpar(fontsize = 14),
+                cluster_rows = if (input$dendrogram == "row" | input$dendrogram == "both") TRUE else FALSE,
+                cluster_columns = if (input$dendrogram == "column" | input$dendrogram == "both") TRUE else FALSE,
+                show_heatmap_legend = input$key,
+                heatmap_legend_param = list(title = "Density")
         )
       }
     }
