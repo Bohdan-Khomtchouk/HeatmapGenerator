@@ -5,16 +5,34 @@ library(tools)
   ### Inputting/Formatting Data ###
 
   # Potential Arguments
-  outputFilename <- ''
+  outputFilename <- 'Heatmap.png'
+  mainTitle <- 'Correlation' # Default Value
+  xLabel <- 'nil'
+  yLabel <- 'nil'
   
-  # Handling Arguments
-  args = commandArgs(trailingOnly=TRUE) # Arg 1 = File Path
+  # Import Arguments
+  args = commandArgs(trailingOnly=TRUE) 
+    # Arg 1 = File Path
+    # Arg 2 = Output File Name [outputFilename]
+    # Arg 3 = Main Heatmap Title
+    # Arg 4 = Optional XLab (nil if not used)
+    # Arg 5 = Optional YLab (nil if not used)
+  
+  # Assign Arguments
   sourceFile <- args[1]
-  if (length(args) > 1) {
-    ## Arg 2 = Output File Name
-    outputFilename <- trimws(args[2]) # Need to do some string processing, data verification (on the JS end probably)
-  }
+  outputFilename <- trimws(args[2]) # Need to do some string processing, data verification (on the JS end probably)
+  mainTitle <- args[3]
+  xLabel <- args[4]
+  yLabel <- args[5]
   
+  # Process Arguments
+  mainTitle <- gsub("%20", " ", mainTitle)
+  xLabel <- gsub("%20", " ", xLabel)
+  if (xLabel == "nil") xLabel <- ''
+  yLabel <- gsub("%20", " ", yLabel)
+  if (yLabel == "nil") yLabel <- ''
+  
+  # Parse Actual Data
   data <- NULL # Instantiate data var -- data will always be a .txt or .csv -- should I use else still? Just to be safe?
   if (file_ext(sourceFile) == "csv") data <- read.csv(sourceFile, comment.char="#")
   if (file_ext(sourceFile) == "txt") data <- read.delim(sourceFile, comment.char = "#")
@@ -41,8 +59,18 @@ library(tools)
     pointsize = 8)        # smaller font size
   
   heatmap.2(mat_data,
- #   cellnote = mat_data,  # same data set for cell labels
-    main = "Correlation", # heat map title
+    main = mainTitle,     # main label for heatmap
+    xlab = xLabel,            # x-axis label
+    ylab= yLabel,              # y-axis label
+ #  Rowv = false,         # determines if dendrogram should be reordered by row mean (row clustering) -- def=true
+ #  Colv = false,         # determines if dendrogram shoudl be reordered by col mean (col clustering) -- def=true
+ #  distfun = dist,       # use a custom func to calc distance/dissimilarity b/w rows and cols (make some presets?) -- def=dist
+ #  hclustfun = hclust,   # use a custom func to compute hierarchical clustering -- def=hclust
+ #  dendrogram = "none",  # draw 'none', 'row', 'column', or 'both' -- def=both
+ #  reorderfun = ...      # dendrogram func for reordering rows and columns
+ #  symm = true,          # determines if x should be treated symmetrically (must be square matrix)
+ #  scale = "none",       # detemrines if values should be centered in row or col direction -- def=none
+ #  cellnote = mat_data,  # same data set for cell labels
     notecol="black",      # change font color of cell labels to black
     density.info="none",  # turns off density plot inside color legend
     trace="none",         # turns off trace lines inside the heat map
@@ -50,7 +78,7 @@ library(tools)
     col=my_palette,       # use on color palette defined earlier
   # breaks=col_breaks,    # enable color transition at specified limits
     dendrogram="none",     # only draw a row dendrogram
-    Colv="NA")            # turn off column clustering
+    )           
   
   dev.off()
   quit()

@@ -26,7 +26,11 @@ function createWindow () {
     webPreferences: {
       nodeIntegration: true,
       nodeIntegrationInWorker: true
-    }
+    },
+    resizable: false,
+    fullscreenable: false,
+    fullscreen: false,
+    title: 'Heatmap Generator',
   })
 
   mainWindow.loadURL(winURL)
