@@ -1,7 +1,21 @@
 library(gplots)
-library(RColorBrewer)
 library(tools)
   
+  ### Output Management ###
+  OS <- .Platform$OS.type
+  mainDir <- "nil"
+  subDir <- "HMG/"
+  if (OS == "unix"){
+    mainDir <- "~/" # MAC file path
+  } else if (OS == "windows"){
+    mainDir <- file.path(Sys.getenv("USERPROFILE")) # windows file path
+    print(Sys.getenv("USERPROFILE"))
+  } else {
+    print("ERROR: OS could not be identified")
+  }
+  dir.create(file.path(mainDir, subDir), showWarnings = FALSE)
+  setwd(file.path(mainDir, subDir))
+
   ### Inputting/Formatting Data ###
 
   # Potential Arguments
@@ -52,7 +66,9 @@ library(tools)
   
   # creates a 5 x 5 inch image
   
-  png(outputFilename,
+  finalPath <- paste(outputFilename)
+  print(paste("FINAL OUTPUT PATH: ", finalPath))
+  png(finalPath,
     width = 5*300,        # 5 x 300 pixels
     height = 5*300,
     res = 300,            # 300 pixels per inch
@@ -79,7 +95,7 @@ library(tools)
   # breaks=col_breaks,    # enable color transition at specified limits
     dendrogram="none",     # only draw a row dendrogram
     )           
-  
+  print(paste("Working Directory: ", getwd()))
   dev.off()
   quit()
 

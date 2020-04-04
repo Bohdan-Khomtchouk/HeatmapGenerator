@@ -7,8 +7,13 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'home-page',
-      component: require('@/components/homepage').default
+      name: 'Dependency',
+      component: require('@/components/dependencies').default
+    },
+    {
+      path: '/generate',
+      name: 'Generator',
+      component: require('@/components/generator').default
     },
     {
       path: '*',

@@ -1,12 +1,14 @@
 {
-  "name": "electronvueapp",
-  "version": "0.0.1",
-  "author": "alirahm99 <alirahm99@gmail.com>",
-  "description": "An electron-vue project",
+  "name": "HeatmapGenerator",
+  "version": "0.2.0",
+  "author": "Ali Rahman <alirahm99@gmail.com>",
+  "description": "A cross-platform heatmap generator built on R and Electron.",
   "license": null,
   "main": "./dist/electron/main.js",
   "scripts": {
-    "build": "node .electron-vue/build.js && electron-builder",
+    "build": "node .electron-vue/build.js && electron-builder -mw",
+    "buildmac": "node .electron-vue/build.js && electron-builder",
+    "buildwin": "node .electron-vue/build.js && electron-builder -w",
     "build:dir": "node .electron-vue/build.js && electron-builder --dir",
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
     "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
@@ -18,10 +20,9 @@
     "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.js",
     "postinstall": "npm run lint:fix"
   },
-
   "build": {
-    "productName": "Heatmap Generator",
-    "appId": "com.alirahman.playground",
+    "productName": "HeatmapGenerator",
+    "appId": "com.alirahman.HeatmapGenerator",
     "directories": {
       "output": "build"
     },
@@ -56,7 +57,16 @@
       "icon": "build/icons/icon.icns"
     },
     "win": {
-      "icon": "build/icons/icon.ico"
+      "icon": "build/icons/icon.ico",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ]
     },
     "linux": {
       "icon": "build/icons"
@@ -66,6 +76,8 @@
     "axios": "^0.18.0",
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.5.0",
+    "fix-path": "^3.0.0",
+    "remote": "^0.2.6",
     "vue": "^2.5.16",
     "vue-electron": "^1.0.6",
     "vue-router": "^3.0.1",

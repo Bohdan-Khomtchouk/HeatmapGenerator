@@ -27,14 +27,15 @@ function createWindow () {
       nodeIntegration: true,
       nodeIntegrationInWorker: true
     },
-    resizable: false,
-    fullscreenable: false,
-    fullscreen: false,
     title: 'Heatmap Generator',
+    show: false
   })
 
   mainWindow.loadURL(winURL)
-
+  mainWindow.on('ready-to-show', function () {
+    mainWindow.show()
+    mainWindow.focus()
+  })
   mainWindow.on('closed', () => {
     mainWindow = null
   })
