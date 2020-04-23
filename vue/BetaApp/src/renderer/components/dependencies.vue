@@ -59,6 +59,7 @@
           const fixPath = require('fix-path') // Fixes $PATH on MacOS, necessary for proper R access
           fixPath()
           commandString = 'R --version' // If fixPath module works, we should have global access to R
+          // LATER NOTE: Consider using 'which R' (works on Linux or Mac), if R is installed it can give you the path
         } else if (opsys === 'win32' || opsys === 'win64') {
           // Windows
           commandString = '/"Program Files"/R/R-3.6.3/bin/R.exe --version'

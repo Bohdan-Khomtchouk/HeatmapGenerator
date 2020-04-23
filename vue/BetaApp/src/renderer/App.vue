@@ -27,7 +27,7 @@
 
 <script>
   export default {
-    name: 'Heatmap Generator'
+    name: 'HeatmapGenerator'
   }
 </script>
 
