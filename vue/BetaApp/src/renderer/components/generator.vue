@@ -79,12 +79,12 @@
         var exec = require('child_process').exec
         const path = require('path')
         var opsys = process.platform
-        var commandBase = '' // Path to rscript (OS-specific)
+        var commandBase = ''
         if (opsys === 'darwin') {
           // MacOS
-          const fixPath = require('fix-path') // Fixes $PATH on MacOS
+          const fixPath = require('fix-path')
           fixPath()
-          commandBase = 'rscript ' // for OSX it should be installed globally... check this
+          commandBase = 'rscript '
         } else if (opsys === 'win32' || opsys === 'win64') {
           // Windows
           commandBase = '/"Program Files"/R/R-3.6.3/bin/Rscript.exe ' // this is hardcoded for now
@@ -98,9 +98,9 @@
         // UPDATE: depending on arguments to pass, this query must be updated
         var processedMainTitle = this.mainTitle.replace(/  */g, '%20') // Replace spaces with %20, will take them out on the R end
         if (!processedMainTitle) processedMainTitle = 'nil'
-        var processedXLab = this.xLab.replace(/  */g, '%20') // Replace spaces with %20, will take them out on the R end
+        var processedXLab = this.xLab.replace(/  */g, '%20')
         if (!processedXLab) processedXLab = 'nil'
-        var processedYLab = this.yLab.replace(/  */g, '%20') // Replace spaces with %20, will take them out on the R end
+        var processedYLab = this.yLab.replace(/  */g, '%20')
         if (!processedYLab) processedYLab = 'nil'
         var commandString = commandBase + locationOfHeatmapScript + ' ' + this.filename + ' ' + this.outputFilename + '.png' + ' ' + processedMainTitle + ' ' + processedXLab + ' ' + processedYLab
         exec(commandString,

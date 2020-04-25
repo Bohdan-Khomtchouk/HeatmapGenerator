@@ -46,42 +46,45 @@
         }
       },
       name: 'dependency',
-      methods: {},
+      methods: {
+        checkForR: function (commandString) {
+          let self = this
+          var exec = require('child_process').exec
+          exec(commandString, (error, stdout, stderr) => {
+            if (error !== null) {
+              console.log('func: checkForR -- ERROR: ' + error)
+            }
+            console.log(stdout)
+            self.dependencyList[0][1] = !(stdout.includes('command not found') || stdout.includes('is not recognized') || stdout.includes('cannot find the path'))
+            self.$forceUpdate()
+          })
+        }
+      },
       created: function () {
-        /* NOTE: eventually, I think I want the results of this check to be stored at least for the current session.
-        There should be no need to call BASH every time they flip to this screen, right? */
-        let self = this
-        var commandString = ''
         var exec = require('child_process').exec
         var opsys = process.platform
         if (opsys === 'darwin') {
-          // MacOS
-          const fixPath = require('fix-path') // Fixes $PATH on MacOS, necessary for proper R access
+          const fixPath = require('fix-path')
           fixPath()
-          commandString = 'R --version' // If fixPath module works, we should have global access to R
-          // LATER NOTE: Consider using 'which R' (works on Linux or Mac), if R is installed it can give you the path
+          var commandString = 'R --version'
+          this.checkForR(commandString)
         } else if (opsys === 'win32' || opsys === 'win64') {
-          // Windows
-          commandString = '/"Program Files"/R/R-3.6.3/bin/R.exe --version'
-          /* What we will need to do:
-          * 1) cd /"Program Files"/R
-          * 2) dir
-          * 3) Parse, then Regex find all R-*.*.*
-          * 4) Sort from newest to oldest
-          * 5) Execute /"Program Files"/R/R-_._._/bin/R.exe --version
-          * NOTE: Should this command stem be stored globally? We don't want to redo this process on the generator page too...
-          * */
+          exec('cd \\ && cd /"Program Files"/R && dir', (err, stdout, stderr) => {
+            if (err) {
+              console.log('func: created -- ERROR: ' + err.toString())
+            } else {
+              if (stdout === 'The system cannot find the path specified.') console.log('R NOT INSTALLED')
+              else {
+                var regexp = /R-([0-9])\.([0-9])\.([0-9])/g
+                var version = stdout.match(regexp)
+                var commandString = 'cd \\ && /"Program Files"/R/' + version[0].toString() + '/bin/R.exe --version'
+                this.checkForR(commandString)
+              }
+            }
+          })
         } else {
           // Linux -- I have no plan for this yet
         }
-        exec(commandString,
-          function (error, stdout, stderr) {
-            if (error !== null) {
-              console.log('RCheck Error: ' + error)
-            }
-            self.dependencyList[0][1] = !(stdout.includes('command not found') || stdout.includes('is not recognized')) // Need Linux check too!
-            self.$forceUpdate() // For some reason this doesn't auto-update, we can just force it though
-          })
       }
     }
 </script>
