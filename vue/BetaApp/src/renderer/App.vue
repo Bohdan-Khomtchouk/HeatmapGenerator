@@ -26,8 +26,17 @@
 </template>
 
 <script>
+  import OSManager from './OSManager.js'
   export default {
-    name: 'HeatmapGenerator'
+    name: 'HeatmapGenerator',
+    data: function () {
+      return {
+        systemManager: null
+      }
+    },
+    created: function () {
+      this.systemManager = new OSManager()
+    }
   }
 </script>
 

@@ -20,3 +20,7 @@ heatmapgenerator-electron/.idea/modules.xml
 heatmapgenerator-electron/.idea/misc.xml
 
 *.xml
+vue/BetaApp/dist/electron/.gitkeep
+vue/BetaApp/dist/web/.gitkeep
+
+vue/BetaApp/src/renderer/.Rhistory

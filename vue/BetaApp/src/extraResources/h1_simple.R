@@ -21,8 +21,6 @@ library(tools)
   # Potential Arguments
   outputFilename <- 'Heatmap.png'
   mainTitle <- 'Correlation' # Default Value
-  xLabel <- 'nil'
-  yLabel <- 'nil'
   
   # Import Arguments
   args = commandArgs(trailingOnly=TRUE) 
@@ -34,7 +32,10 @@ library(tools)
   
   # Assign Arguments
   sourceFile <- args[1]
-  outputFilename <- trimws(args[2]) # Need to do some string processing, data verification (on the JS end probably)
+  outputFilename <- args[2] # Need to do some string processing, data verification (on the JS end probably)
+  for (argument in args) {
+    print(argument)
+  }
   mainTitle <- args[3]
   xLabel <- args[4]
   yLabel <- args[5]
@@ -42,9 +43,9 @@ library(tools)
   # Process Arguments
   mainTitle <- gsub("%20", " ", mainTitle)
   xLabel <- gsub("%20", " ", xLabel)
-  if (xLabel == "nil") xLabel <- ''
+  if (xLabel == 'nil') xLabel = ""
   yLabel <- gsub("%20", " ", yLabel)
-  if (yLabel == "nil") yLabel <- ''
+  if (yLabel == 'nil') yLabel = ""
   
   # Parse Actual Data
   data <- NULL # Instantiate data var -- data will always be a .txt or .csv -- should I use else still? Just to be safe?

@@ -46,44 +46,23 @@
         }
       },
       name: 'dependency',
-      methods: {
-        checkForR: function (commandString) {
-          let self = this
-          var exec = require('child_process').exec
-          exec(commandString, (error, stdout, stderr) => {
-            if (error !== null) {
-              console.log('func: checkForR -- ERROR: ' + error)
-            }
-            console.log(stdout)
-            self.dependencyList[0][1] = !(stdout.includes('command not found') || stdout.includes('is not recognized') || stdout.includes('cannot find the path'))
-            self.$forceUpdate()
-          })
-        }
-      },
+      methods: {},
       created: function () {
-        var exec = require('child_process').exec
-        var opsys = process.platform
-        if (opsys === 'darwin') {
-          const fixPath = require('fix-path')
-          fixPath()
-          var commandString = 'R --version'
-          this.checkForR(commandString)
-        } else if (opsys === 'win32' || opsys === 'win64') {
-          exec('cd \\ && cd /"Program Files"/R && dir', (err, stdout, stderr) => {
-            if (err) {
-              console.log('func: created -- ERROR: ' + err.toString())
+        let self = this
+        var manager = this.$parent.$data.systemManager
+        // Only check for R if you have not checked this session.
+        if (manager.isRInstalled === undefined) {
+          manager.verifyRInstallation((error, isRInstalled) => {
+            if (error == null) {
+              self.dependencyList[0][1] = isRInstalled
+              self.$forceUpdate()
             } else {
-              if (stdout === 'The system cannot find the path specified.') console.log('R NOT INSTALLED')
-              else {
-                var regexp = /R-([0-9])\.([0-9])\.([0-9])/g
-                var version = stdout.match(regexp)
-                var commandString = 'cd \\ && /"Program Files"/R/' + version[0].toString() + '/bin/R.exe --version'
-                this.checkForR(commandString)
-              }
+              alert(error.toString())
             }
           })
         } else {
-          // Linux -- I have no plan for this yet
+          self.dependencyList[0][1] = manager.isRInstalled
+          self.$forceUpdate()
         }
       }
     }
