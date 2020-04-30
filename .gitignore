@@ -24,3 +24,5 @@ vue/BetaApp/dist/electron/.gitkeep
 vue/BetaApp/dist/web/.gitkeep
 
 vue/BetaApp/src/renderer/.Rhistory
+
+vue/BetaApp/src/extraResources/.Rhistory

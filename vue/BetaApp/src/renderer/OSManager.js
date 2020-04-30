@@ -14,6 +14,7 @@ export default class OSManager {
     else if (platform === 'Linux') operatingSystem = 'Linux'
     else operatingSystem = 'Unsupported'
     this.OS = operatingSystem
+    this.isGPlotsInstalled = false
   }
   // Public Methods
   verifyRInstallation (callback) {
@@ -74,7 +75,7 @@ export default class OSManager {
               var version = stdout.match(regexp)
               if (version.length > 0) {
                 this.rVersion = version[0].toString()
-                var commandBase = '/"Program Files"/R/' + this.rVersion.toString() + 'R-3.6.3/bin/Rscript.exe '
+                var commandBase = '/"Program Files"/R/' + this.rVersion.toString() + '/bin/Rscript.exe '
                 return commandBase
               } else {
                 throw Error('No compatible versions of R found')
@@ -83,7 +84,7 @@ export default class OSManager {
           }
         })
       } else {
-        var commandBase = '/"Program Files"/R/' + this.rVersion.toString() + 'R-3.6.3/bin/Rscript.exe '
+        var commandBase = '/"Program Files"/R/' + this.rVersion.toString() + '/bin/Rscript.exe '
         return commandBase
       }
     } else if (this.OS === 'Linux') {
@@ -91,6 +92,32 @@ export default class OSManager {
     } else {
       throw Error('Unsupported OS.')
     }
+  }
+  verifyGPlotsInstallation (callback) {
+    var exec = require('child_process').exec
+    let self = this
+    const path = require('path')
+    var locationOfHeatmapScript = ''
+    if (process.env.NODE_ENV === 'development') {
+      locationOfHeatmapScript = path.resolve(__dirname, '../extraResources', 'gplotCheck.R')
+    } else {
+      locationOfHeatmapScript = path.resolve(process.resourcesPath, 'extraResources', 'gplotCheck.R')
+    }
+    let commandString = this.getRScriptPath() + ' ' + locationOfHeatmapScript
+    exec(commandString, (err, stdout) => {
+      if (err) {
+        callback(err, null)
+      } else {
+        console.log(stdout)
+        if (stdout.includes('true')) {
+          self.isGPlotsInstalled = true
+          callback(null, true) // should be true
+        } else {
+          self.isGPlotsInstalled = false
+          callback(null, false)
+        }
+      }
+    })
   }
   getOutputFilePath (outputFilename) {
     const electron = require('electron')

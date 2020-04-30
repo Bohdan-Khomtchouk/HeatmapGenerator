@@ -42,7 +42,7 @@
       },
       data: function () {
         return {
-          dependencyList: [['R', false, 'Handles clustering and graphic generation.']]
+          dependencyList: [['R', false, 'Handles general clustering and graphic generation.'], ['gplots', false, 'Handles heatmap construction with graphical customization.']]
         }
       },
       name: 'dependency',
@@ -55,6 +55,14 @@
           manager.verifyRInstallation((error, isRInstalled) => {
             if (error == null) {
               self.dependencyList[0][1] = isRInstalled
+              manager.verifyGPlotsInstallation((err, isGPlotsInstalled) => {
+                if (err == null) {
+                  self.dependencyList[1][1] = isGPlotsInstalled
+                  self.$forceUpdate()
+                } else {
+                  alert(err.toString())
+                }
+              })
               self.$forceUpdate()
             } else {
               alert(error.toString())
@@ -62,6 +70,7 @@
           })
         } else {
           self.dependencyList[0][1] = manager.isRInstalled
+          self.dependencyList[1][1] = manager.isGPlotsInstalled
           self.$forceUpdate()
         }
       }
