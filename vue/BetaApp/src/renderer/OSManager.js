@@ -3,7 +3,6 @@
 
 export default class OSManager {
   constructor () {
-    // ID the OS
     var platform = process.platform
     var operatingSystem = ''
     if (platform === 'darwin') {
@@ -16,7 +15,6 @@ export default class OSManager {
     this.OS = operatingSystem
     this.isGPlotsInstalled = false
   }
-  // Public Methods
   verifyRInstallation (callback) {
     var exec = require('child_process').exec
     let self = this
@@ -36,7 +34,7 @@ export default class OSManager {
         } else {
           if (stdout === 'The system cannot find the path specified.') throw Error('R is not installed.')
           else {
-            var regexp = /R-([0-9])\.([0-9])\.([0-9])/g
+            var regexp = /R-([0-9])\.([0-9])\.([0-9])/g // Regex for R-#.#.#
             var version = stdout.match(regexp)
             if (version.length > 0) {
               self.rVersion = version[0].toString()
@@ -137,7 +135,6 @@ export default class OSManager {
     } else throw Error('Unsupported system.')
     return outputLocation
   }
-  // Private methods ($ prefix)
   $rCheckExecution (commandString, callback) {
     let exec = require('child_process').exec
     exec(commandString, (error, stdout, stderr) => {

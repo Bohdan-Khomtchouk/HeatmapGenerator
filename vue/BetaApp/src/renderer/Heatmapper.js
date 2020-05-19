@@ -16,14 +16,12 @@ export default class Heatmapper {
     var exec = require('child_process').exec
     var self = this
     const path = require('path')
-    // Locate heatmap script within the package
     var locationOfHeatmapScript = ''
     if (process.env.NODE_ENV === 'development') {
       locationOfHeatmapScript = path.resolve(__dirname, '../extraResources', 'h1_simple.R')
     } else {
       locationOfHeatmapScript = path.resolve(process.resourcesPath, 'extraResources', 'h1_simple.R')
     }
-    // UPDATE: depending on arguments to pass, this query must be updated
     var processedMainTitle = this.mainTitle.replace(/  */g, '%20') // Replace spaces with %20, will take them out on the R end
     if (processedMainTitle === '') processedMainTitle = 'nil'
     var processedXLab = this.xAxis.replace(/  */g, '%20')
@@ -32,7 +30,6 @@ export default class Heatmapper {
     if (processedYLab === '') processedYLab = 'nil'
     let parameters = [this.systemManager.getRScriptPath() + ' ', locationOfHeatmapScript + ' ', this.filename + ' ', this.outputFileName + ' ', processedMainTitle + ' ', processedXLab + ' ', processedYLab + ' ']
     var commandString = parameters.join('')
-    console.log('Command String: ' + commandString)
     exec(commandString,
       function (error, stdout, stderr) {
         if (error == null) {
@@ -46,7 +43,6 @@ export default class Heatmapper {
   }
   presentHeatmap (callback) {
     const electron = require('electron')
-    console.log(this.outputFilePath)
     electron.shell.openItem(this.outputFilePath)
   }
 }

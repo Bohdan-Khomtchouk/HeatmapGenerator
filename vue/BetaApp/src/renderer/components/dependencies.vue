@@ -50,7 +50,6 @@
       created: function () {
         let self = this
         var manager = this.$parent.$data.systemManager
-        // Only check for R if you have not checked this session.
         if (manager.isRInstalled === undefined) {
           manager.verifyRInstallation((error, isRInstalled) => {
             if (error == null) {

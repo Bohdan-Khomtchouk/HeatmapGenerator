@@ -29,13 +29,13 @@
                         </div>
                         <div class="row">
                             <div class="col-sm">
-                                <b-input placeholder="Graph Title" v-model="mainTitle"></b-input>
+                                <b-input placeholder="Graph Title" @input="dataVerification" v-model="mainTitle"></b-input>
                             </div>
                             <div class="col-sm">
-                                <b-input placeholder="X-axis Title" v-model="xLab"></b-input>
+                                <b-input placeholder="X-axis Title" @input="dataVerification" v-model="xLab"></b-input>
                             </div>
                             <div class="col-sm">
-                                <b-input placeholder="Y-axis Title" v-model="yLab"></b-input>
+                                <b-input placeholder="Y-axis Title" @input="dataVerification" v-model="yLab"></b-input>
                             </div>
                         </div>
                     </div>
@@ -84,6 +84,7 @@
             self.isLoading = false
             htmp.presentHeatmap()
           } else {
+            self.isLoading = false
             alert(error.toString())
           }
         })
@@ -107,7 +108,11 @@
       },
       dataVerification () {
         // eslint-disable-next-line eqeqeq
-        if (!/[^a-z0-9_.@()-]/i.test(this.outputFilename) && !this.outputFilename == '') this.dataVerified = true // Regex for Filename, add some sort of alert that the file name isn't approp.
+        var outputFilenameValid = !(/[^a-z0-9_.@()-]/i.test(this.outputFilename) || this.outputFilePath == '')
+        var mainTitleValid = !/[^a-z0-9_.@()//-/\s]/i.test(this.mainTitle)
+        var xLabValid = !/[^a-z0-9_.@()//-/\s]/i.test(this.xLab)
+        var yLabValid = !/[^a-z0-9_.@()//-/\s]/i.test(this.yLab)
+        if (outputFilenameValid && mainTitleValid && xLabValid && yLabValid) this.dataVerified = true // Regex for Filename, add some sort of alert that the file name isn't approp.
         else this.dataVerified = false
       }
     }
