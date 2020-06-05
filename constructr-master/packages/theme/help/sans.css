@@ -1,0 +1,16 @@
+
+/** this is a stylesheet injected into R help pages */
+
+html, body {
+	font-family: segoe ui;
+	font-size: 15px !important;
+}
+
+body { 
+	margin: 2em;
+}
+
+h1, h2, h3, h4 {
+	font-family: inherit !important;
+	font-weight: 400 !important;
+}

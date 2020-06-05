@@ -1,0 +1,249 @@
+{
+	"shell-context-menu": [
+		{
+			"label": "Cut",
+			"role": "cut"
+		},
+		{
+			"label": "Copy",
+			"role": "copy"
+		},
+		{
+			"label": "Paste",
+			"role": "paste"
+		},
+		{
+			"label": "Select All",
+			"message": "context-select-all"
+		},
+		{
+			"type": "separator"
+		},
+		{
+			"label": "Clear Shell",
+			"message": "clear-shell"
+		},
+		{
+			"label": "Save Shell Contents...",
+			"message": "save-shell"
+		},
+		{
+			"label": "Shell Preferences",
+			"message": "preferences"
+		},
+		{
+			"type": "separator"
+		},
+		{
+			"label": "Cancel"
+		}
+	],
+	"application": [
+		{
+			"label": "ConstructR-Shell",
+			"platform": "darwin",
+			"submenu": [
+				{
+					"label": "About ConstructR-Shell",
+					"role": "about"
+				},
+				{
+					"type": "separator"
+				},
+				{
+					"label": "Hide ConstructR-Shell",
+					"accelerator": "Command+H",
+					"role": "hide"
+				},
+				{
+					"label": "Hide Others",
+					"accelerator": "Command+Alt+H",
+					"role": "hideothers"
+				},
+				{
+					"label": "Show All",
+					"role": "unhide"
+				},
+				{
+					"type": "separator"
+				},
+				{
+					"label": "Quit",
+					"accelerator": "Command+Q",
+					"message": "close"
+				}
+			]
+		},
+        {
+            "label": "File",
+            "submenu": [
+                {
+                    "label": "Save History...",
+                    "message": "save-history"
+                },
+                {
+                    "label": "Save Shell Contents as HTML...",
+                    "message": "save-shell"
+                },
+                {
+                    "label": "Save Environment",
+                    "message": "save-environment"
+                },
+                {   "type": "separator" },
+                {
+					"label": "Quit",
+					"accelerator": "CmdOrCtrl+Q",
+					"message": "close"
+				}
+            ]
+        },
+		{
+			"label": "Edit",
+			"submenu":  [
+				{
+					"label": "Undo",
+					"accelerator": "CmdOrCtrl+Z",
+					"role": "undo"
+				},
+				{
+					"label": "Redo",
+					"accelerator": "Shift+CmdOrCtrl+Z",
+					"role": "redo"
+				},
+				{
+					"type": "separator"
+				},
+				{
+					"label": "Cut",
+					"accelerator": "CmdOrCtrl+X",
+					"role": "cut"
+				},
+				{
+					"label": "Copy",
+					"accelerator": "CmdOrCtrl+C",
+					"role": "copy"
+				},
+				{
+					"label": "Paste",
+					"accelerator": "CmdOrCtrl+V",
+					"role": "paste"
+				},
+				{
+					"label": "Select All",
+					"accelerator": "CmdOrCtrl+A",
+					"role": "selectall"
+				}
+			]
+		},
+		{
+			"label": "View",
+			"submenu":  [
+				{
+					"label": "Reload",
+					"accelerator": "CmdOrCtrl+R",
+					"message": "reload"
+				},
+				{
+					"label": "Toggle Full Screen",
+					"accelerator": "F11",
+					"accelerator-darwin": "Ctrl+Command+F",
+					"message": "full-screen"
+				},
+				{
+					"label": "Toggle Developer Tools",
+					"accelerator": "Ctrl+Shift+I",
+					"accelerator-darwin": "Alt+Command+I",
+					"message": "developer-tools"
+				},
+				{
+					"label": "Graphics Panel",
+					"message": "graphics-panel"
+				},
+				{
+					"type": "separator"
+				},
+				{
+					"label": "Locals",
+					"accelerator": "F9",
+					"message": "locals"
+				},
+				{
+					"label": "Watch",
+					"accelerator": "F8",
+					"message": "watch"
+				},
+				{
+					"label": "History",
+					"accelerator": "Ctrl+H",
+					"message": "history"
+				},
+				{
+					"type": "separator"
+				},
+				{
+					"label": "Clear Shell",
+					"accelerator": "Ctrl+Shift+X",
+					"accelerator-darwin": "Alt+Command+X",
+					"message": "clear-shell"
+				},
+				{
+					"label": "Toggle Shell Preferences",
+					"accelerator": "Ctrl+Shift+P",
+					"accelerator-darwin": "Alt+Command+P",
+					"message": "preferences"
+				},
+				{
+					"type": "separator"
+				},
+				{
+					"label": "Choose CRAN Mirror",
+					"accelerator": "Ctrl+Shift+M",
+					"accelerator-darwin": "Alt+Command+M",
+					"message": "choose-mirror"
+				},
+				{
+					"label": "Install Packages",
+					"accelerator": "Ctrl+Shift+K",
+					"accelerator-darwin": "Alt+Command+K",
+					"message": "install-packages"
+				}
+			]
+		},
+		{
+			"label": "Window",
+			"role": "window",
+			"submenu": [
+				{
+					"label": "Minimize",
+					"accelerator": "CmdOrCtrl+M",
+					"role": "minimize"
+				},
+				{
+					"label": "Close",
+					"accelerator": "CmdOrCtrl+W",
+					"message": "close"
+				},
+				{
+					"label": "Bring All to Front",
+					"role": "front",
+					"platform": "darwin"
+				}
+			]	
+		},
+		{
+			"label": "&Help",
+			"role": "help",
+			"submenu": [
+				{
+					"label": "Learn More",
+					"message": "learn-more"
+				},
+				{
+					"label": "&About",
+					"message": "about",
+					"!platform": "darwin"
+				}
+			]	
+		}
+	]
+}

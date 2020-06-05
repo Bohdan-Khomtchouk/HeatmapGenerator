@@ -1,0 +1,22 @@
+{
+    "name": "theme",
+    "version": "0.1.0",
+    "main": "theme.js",
+    "preferenceGroups": {
+        "Shell Theme": {
+            "theme": {
+                "type": "choice",
+                "default": "default",
+                "options": "get_shell_themes"
+            }
+        }, 
+        "UI Theme": {
+            "uitheme": {
+                "type": "choice",
+                "default": "default",
+                "options": "get_ui_themes"
+            }
+        }
+    }
+}
+

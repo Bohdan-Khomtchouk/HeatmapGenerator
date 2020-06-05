@@ -1,0 +1,99 @@
+/**
+ * Copyright (c) 2016 Structured Data, LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to 
+ * deal in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ * sell copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+display-grid {
+    background: #ccc;
+}
+
+#grid-column-header {
+    background: #ccc;
+}
+
+#grid-row-header-background {
+    background: #ccc;
+}
+
+.grid-header {
+    background: #eee;
+    text-align: center;
+    cursor: text;
+}
+
+.table-cell {
+    background: #fff;
+    cursor: cell;
+    text-align: right;
+}
+
+.table-cell-date, .table-cell-factor, .table-cell-string {
+    text-align: center;
+}
+
+.table-cell-left {
+    text-align: left;
+}
+
+.table-cell.fixed-width {
+    font-size: 1em;
+}
+
+/* alternate rows, except for selection */
+grid-row:nth-child(odd) .table-cell:not(.selected) {
+    /* background: #ecf9fe; */
+    background: rgb(235, 240, 250);
+}
+
+/* === selections =============================== */
+
+.table-cell.selected {
+    background: lightyellow;
+}
+
+.grid-header.selected {
+    background: yellow;
+}
+
+.selection-border {
+    background: yellow;   
+    min-width: 3px;
+    min-height: 3px;
+}
+
+/* === sort arrows ============================== */
+
+.header-column-sort-ascending::after {
+    content: "▲";
+    position: absolute;
+    opacity: .4;
+    font-size: .6em;
+    padding-left: .6em;
+    padding-top: .4em;
+}
+
+.header-column-sort-descending::after {
+    content: "▼";
+    position: absolute;
+    opacity: .4;
+    font-size: .6em;
+    padding-left: .6em;
+    padding-top: .4em;
+}

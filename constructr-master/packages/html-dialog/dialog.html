@@ -1,0 +1,192 @@
+<!-- 
+
+ Copyright (c) 2016 Structured Data, LLC
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to 
+ deal in the Software without restriction, including without limitation the 
+ rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ sell copies of the Software, and to permit persons to whom the Software is 
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in 
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ IN THE SOFTWARE.
+
+-->
+<dom-module id="html-dialog">
+
+	<template>
+		<style>
+			
+			:host {
+				position: absolute;
+				top: 0px;
+				left: 0px;
+				height: 100%;
+				width: 100%;
+				z-index: 1000;
+			}
+
+			:host.hidden {
+				display: none;
+			}
+			
+			.screen-overlay {
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background: #000;
+				opacity: .5;
+				z-index: 1001;
+			}
+			
+			.dialog-chrome {
+				z-index: 1002;
+				position: relative;
+				top: 50%;
+				transform: translateY(-50%);
+				margin: 0 auto;
+
+				border-radius: 4px;
+				min-height: 400px;
+				min-width: 500px;
+				width: 0;
+				
+				display: flex;
+				flex-direction: column;
+			}
+
+			.dialog-body {
+				flex-grow: 1;
+				padding: 1em;
+			}
+
+			.dialog-header {
+				position: relative;
+				display: flex;
+			}
+			
+			.dialog-header .dialog-title {
+				flex-grow: 1;
+				margin-top: 1em;
+				margin-left: 1em;
+			}
+			
+			.dialog-header button {
+				height: 2em;
+				width: 2em;
+				margin: 10px 10px 10px 0px;
+				padding: 0 0;
+				background: inherit;
+				text-align: right;
+				overflow: hidden;
+			}
+			
+			.dialog-footer button {
+				margin: .5em .25em;
+			}
+			
+		</style>
+
+		<div class='screen-overlay' on-click='cancel'></div>
+		<div class='dialog-chrome'>
+			<div class='dialog-header'>
+				<div class='dialog-title'>
+					{{title}}
+				</div>
+				<button on-click='cancel' class='close-dialog'>
+					<i class="material-icons">close</i>
+				</button>	
+			</div>
+			<div class='dialog-body'>
+				<content></content>
+			</div>
+			<div class='dialog-footer'>
+				<template is='dom-if' if='{{accept-button}}'>
+					<button on-click='accept'>{{accept-text}}</button>
+				</template>
+				<template is='dom-if' if='{{cancel-button}}'>
+					<button on-click='cancel'>{{cancel-text}}</button>
+				</template>
+			</div>
+		</div>
+	</template>
+	
+	<script>
+
+Polymer({
+	
+	is: "html-dialog",
+	
+	properties: {
+		visible: {
+			type: Boolean,
+			value: true
+		},
+		title: {
+			type: String,
+			value: "Dialog"
+		},
+		"accept-text": {
+			type: String,
+			value: "Accept"
+		},
+		"accept-button": {
+			type: Boolean,
+			value: true
+		},
+		"cancel-text": {
+			type: String,
+			value: "Cancel"
+		},
+		"cancel-button": {
+			type: Boolean,
+			value: true
+		}
+	},
+	
+	appendChild: function(child){
+		Polymer.dom(this).appendChild(child);
+	},
+	
+	removeChild: function(child){
+		Polymer.dom(this).removeChild(child);
+	},
+	
+	clear: function(){
+		var children = Polymer.dom(this).children;
+		for( var i = 0; i< children.length; i++ ) Polymer.dom( this ).removeChild( children[i] );	
+		return children;
+	},
+	
+	show: function(visible){
+		if( typeof visible === "undefined" ) visible = true;
+		this.visible = visible;
+		if( this.visible ) this.classList.remove( "hidden" );
+		else this.classList.add( "hidden" );
+	},
+	
+	accept: function(e){
+		e.stopPropagation();
+		this.fire( "accept" );
+	},
+	
+	cancel: function(e){
+		e.stopPropagation();
+		this.fire( "cancel" );
+	}
+	
+});
+		
+	</script>
+</dom-module>

@@ -1,0 +1,206 @@
+<!-- 
+
+ Copyright (c) 2016 Structured Data, LLC
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to 
+ deal in the Software without restriction, including without limitation the 
+ rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ sell copies of the Software, and to permit persons to whom the Software is 
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in 
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ IN THE SOFTWARE.
+
+-->
+
+<dom-module id="histogram-bar">
+    <template>
+         <style>
+            :host {
+                flex-grow: 1;
+                box-sizing: border-box;
+                margin-left: 1px;
+                height: 100%;
+                position: relative;
+            }
+
+            #bar {
+                box-sizing: border-box;
+                position: absolute;
+                height: 0px;
+                width: 100%;
+                background: lightblue;
+                bottom: 0px;
+                transition: background .05s linear;
+            }
+
+            /*
+            #bar:hover {
+                background: #d7d4f0;
+            }
+            */
+
+            #break-label {
+                position: absolute;
+                bottom: -1.5em;
+                left: -50%;
+                width: 100%;
+                overflow: visible;
+                text-align: center;
+                font-size: .8em;
+            }
+
+        </style>
+        <div id='bar' style$='height: {{height}}'>
+            <div id='break-label'>{{breakLabel}}</div>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: "histogram-bar",
+            properties: {
+                height: "String",
+                breakLabel: "String"
+            }
+        });
+    </script>
+</dom-module>
+
+<dom-module id="histogram-view">
+	<template>
+        <style>
+            :host {
+                display: flex;
+                position: relative;
+                top: 0px;
+                left: 0px;
+                bottom: 0px;
+                right: 0px;
+                height: 100%;
+                box-sizing: border-box;
+                padding: 3em;
+                background: white;
+                flex-direction: row;
+            }
+
+            .break {
+                box-sizing: border-box;
+                position: absolute;
+                text-align: center;
+                border: 1px solid green;
+            }
+
+        </style>
+
+    </template>
+    <script>
+        Polymer({
+            is: 'histogram-view',
+            
+            properties: {
+                data: {
+                    type: Object,
+                    observer: 'dataChanged'
+                }
+            },
+
+            dataChanged: function(){
+
+                let count = 0;
+                let counts = [];
+                let f = 1, max = 0, sum = 0;
+
+                if( null !== this.data ){
+                    counts = Array.isArray( this.data.$data.counts ) ? 
+                        this.data.$data.counts : [this.data.$data.counts];
+                    count = counts.length;
+                    if( count > 1 ){
+                        let delta = this.data.$data.breaks[1] - this.data.$data.breaks[0];
+                        f = Math.pow( 10, 1 + Math.abs( Math.floor( Math.log10( delta ))));
+                    }
+                    for( let i = 0; i< count; i++ ) sum += counts[i];
+                    max = Math.max.apply(0, counts);
+                }
+
+                let children = Polymer.dom(this.root).children;
+
+                for( let i = children.length; i< count; i++ ){
+                    let bar = document.createElement( "histogram-bar" );
+                    Polymer.dom(this.root).appendChild( bar );
+                }
+
+                if( children.length > count ){
+                    for( let i = count; i< children.length; i++ ){
+                        Polymer.dom(this.root).removeChild( children[i] );
+                    }
+                }
+
+                children = Polymer.dom(this.root).children;
+
+                for( let i = 0; i< count; i++ ){
+                    let child = children[i];
+                    child.height = ( 100 * counts[i] / max ) + "%";
+                    child.breakLabel = "";
+                    if( i%2 ){
+                        child.breakLabel = 
+                            Math.round( this.data.$data.breaks[i] * f ) / f;
+                    }
+
+                    let title = `${counts[i]} (${ Math.round(counts[i]/sum*100) }%)`;
+                    child.setAttribute( 'title', title );
+                }
+
+            }
+
+        });
+    </script>
+</dom-module>
+
+<dom-module id="histogram-panel">
+    <template>
+        <style>
+           
+        </style>
+
+        <div class='panel'>
+            <panel-header title={{title}}></panel-header>
+            <histogram-view data={{data}}></histogram-view>
+        </div>
+
+    </template>
+    <script>
+        Polymer({
+            is: "histogram-panel",
+            properties: {
+                title: "String",
+                field: {
+                    type: "String",
+                    observer: 'dataChanged'
+                },
+                data: {
+                    type: Object,
+                    observer: 'dataChanged'
+                }
+            },
+            dataChanged: function(){
+                let sum = 0;
+                if( null !== this.data ){
+                    let counts = Array.isArray( this.data.$data.counts ) ? 
+                        this.data.$data.counts : [this.data.$data.counts];
+                    counts.forEach( function(c){ sum += c; });
+                }
+                this.title = `Histogram view: ${this.field} (n=${sum})`;
+            }
+        });
+    </script>
+</dom-module>
+
