@@ -2,15 +2,14 @@
 // Module for handling heatmap formation and R interfacing
 
 export default class Heatmapper {
-  constructor (manager, filename, outputFileName, mainTitle, xAxis, yAxis) {
+  constructor (manager, filename, mainTitle, xAxis, yAxis, colorScheme) {
     this.systemManager = manager
     this.filename = filename
-    this.outputFileName = outputFileName + '.png'
     this.mainTitle = mainTitle
     console.log(mainTitle)
     this.xAxis = xAxis
     this.yAxis = yAxis
-    this.outputFilePath = ''
+    this.colorScheme = colorScheme
   }
   generateHeatmap (callback) {
     var exec = require('child_process').exec
@@ -44,5 +43,51 @@ export default class Heatmapper {
   presentHeatmap (callback) {
     const electron = require('electron')
     electron.shell.openItem(this.outputFilePath)
+  }
+  processData (callback) {
+    var data = [
+      {
+        z: [[1, null, 30, 50, 1], [20, 1, 60, 80, 30], [30, 60, 1, -10, 20]],
+        x: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+        y: ['Morning', 'Afternoon', 'Evening'],
+        type: 'heatmap',
+        colorscale: this.colorScheme
+      }
+    ]
+    var layout = {
+      title: {
+        text: this.mainTitle
+        /*
+        font: {
+          family: 'Courier New, monospace',
+          size: 24
+        },
+        xref: 'paper',
+        x: 0.05 */
+      },
+      xaxis: {
+        title: {
+          text: this.xAxis
+          /*
+          font: {
+            family: 'Courier New, monospace',
+            size: 18,
+            color: '#7f7f7f'
+          } */
+        }
+      },
+      yaxis: {
+        title: {
+          text: this.yAxis
+          /*
+          font: {
+            family: 'Courier New, monospace',
+            size: 18,
+            color: '#7f7f7f'
+          } */
+        }
+      }
+    }
+    callback(null, data, layout)
   }
 }
