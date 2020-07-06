@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-5">
-      <a class="navbar-brand font-weight-bold" href="#">Heatmap Generator</a>
+      <a class="navbar-brand" href="#"><img src="../renderer/assets/IconSmall.png" height="30px" alt=""></a>
       <div class="navbar-header">
         <ul class="navbar-nav">
           <li class="nav-item" v-bind:class="{ active: this.$route.path === '/generate'}">

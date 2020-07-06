@@ -6,11 +6,11 @@ export default class Heatmapper {
     this.systemManager = manager
     this.filename = filename
     this.mainTitle = mainTitle
-    console.log(mainTitle)
     this.xAxis = xAxis
     this.yAxis = yAxis
     this.colorScheme = colorScheme
   }
+
   generateHeatmap (callback) {
     var exec = require('child_process').exec
     var self = this
@@ -40,54 +40,62 @@ export default class Heatmapper {
         }
       })
   }
+
   presentHeatmap (callback) {
     const electron = require('electron')
     electron.shell.openItem(this.outputFilePath)
   }
+
   processData (callback) {
-    var data = [
-      {
-        z: [[1, null, 30, 50, 1], [20, 1, 60, 80, 30], [30, 60, 1, -10, 20]],
-        x: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-        y: ['Morning', 'Afternoon', 'Evening'],
-        type: 'heatmap',
-        colorscale: this.colorScheme
+    // Read the CSV
+    let self = this
+    var fs = require('fs')
+    fs.readFile(this.filename, 'utf8', function (err, data) {
+      if (err) {
+        callback(err)
+      } else {
+        var Papa = require('papaparse')
+        Papa.parse(data, {
+          complete: function (results) {
+            var parsedData = results.data
+            // Extract column/row labels
+            var columnLabels = parsedData[0].slice(1)
+            parsedData = parsedData.slice(1)
+            var rowLabels = parsedData.map(function (x) {
+              return x[0]
+            })
+            // Get just the values (no labels) after -- this method is probably slow...
+            var finalData = parsedData.map(function (x) {
+              x.shift()
+              return x
+            })
+            // Plotly Data Object
+            var data = [{
+              z: finalData,
+              x: columnLabels,
+              y: rowLabels,
+              type: 'heatmap',
+              colorscale: self.colorScheme
+            }]
+            // Plotly Layout Object
+            var layout = {
+              title: self.mainTitle,
+              xaxis: {
+                title: {
+                  text: self.xAxis
+                }
+              },
+              yaxis: {
+                title: {
+                  text: self.yAxis
+                }
+              }
+            }
+            callback(null, data, layout)
+          },
+          dynamicTyping: true
+        })
       }
-    ]
-    var layout = {
-      title: {
-        text: this.mainTitle
-        /*
-        font: {
-          family: 'Courier New, monospace',
-          size: 24
-        },
-        xref: 'paper',
-        x: 0.05 */
-      },
-      xaxis: {
-        title: {
-          text: this.xAxis
-          /*
-          font: {
-            family: 'Courier New, monospace',
-            size: 18,
-            color: '#7f7f7f'
-          } */
-        }
-      },
-      yaxis: {
-        title: {
-          text: this.yAxis
-          /*
-          font: {
-            family: 'Courier New, monospace',
-            size: 18,
-            color: '#7f7f7f'
-          } */
-        }
-      }
-    }
-    callback(null, data, layout)
+    })
   }
 }

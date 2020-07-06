@@ -93,6 +93,7 @@
         dataVerified: true,
         filename: '',
         fileSelected: false,
+        fileObj: null,
         isLoading: false,
         mainTitle: '',
         xLab: '',
@@ -123,16 +124,6 @@
         var htmp = new Heatmapper(manager, this.filename, this.mainTitle, this.xLab, this.yLab, this.colorScheme)
         var self = this
         self.isLoading = true
-        /*
-        htmp.generateHeatmap((error) => {
-          if (error == null) {
-            self.isLoading = false
-            htmp.presentHeatmap()
-          } else {
-            self.isLoading = false
-            alert(error.toString())
-          }
-        }) */
         htmp.processData((error, data, layout) => {
           if (error == null) {
             self.isLoading = false
@@ -161,6 +152,7 @@
       },
       cancelFile () {
         Object.assign(this.$data, this.$options.data()) // Clears all generator state data
+        Plotly.purge('graphDiv')
       },
       dataVerification () {
         // eslint-disable-next-line eqeqeq
