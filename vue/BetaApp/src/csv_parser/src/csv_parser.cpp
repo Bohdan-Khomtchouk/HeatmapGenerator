@@ -59,7 +59,7 @@ napi_value ParseCsv(napi_env env, napi_callback_info info) {
   
   
   // Stringify 2D array
-  std::string return_string = "{Result:[";
+  std::string return_string = "{Data:[";
 
   std::ifstream  data(csv_path);
   std::string line;
