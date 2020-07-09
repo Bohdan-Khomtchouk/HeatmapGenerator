@@ -32,71 +32,45 @@ napi_value ParseCsv(napi_env env, napi_callback_info info) {
   if(!ifile) {
       napi_throw_error(env, NULL, "CSV file does not exist at given filepath");
   }
-
   
-  // unsigned row_num = 0;
-  // unsigned col_num = 0;
-  // std::ifstream  data(csv_path);
-  // std::string line;
-  // while(std::getline(data,line))
-  // {
-  //     std::stringstream  lineStream(line);
-  //     std::string        cell;
-      
-  //     if (row_num == 0){
-  //         while(std::getline(lineStream,cell,','))
-  //         {
-  //             col_num += 1;
-  //         }
-  //     }
-  //     else{
-  //         row_num += 1;
-  //     }
-  // }
-
-  // col_num -= 1; // Exclude the extra label column
-  // row_num -= 1; // Exclude the extra label row
-  
-  
-  // Stringify 2D array
-  std::string return_string = "{Data:[";
+  // Stringifying
+  std::string return_string = "{Col_labels:[";
+  std::string row_labels = ",Row_labels:[";
 
   std::ifstream  data(csv_path);
   std::string line;
 
-  unsigned i = 0;
-  unsigned j = 0;
+  std::getline(data,line);
+  std::stringstream  lineStream(line);
+  std::string        cell;
+
+  std::getline(lineStream,cell,',');
+  std::getline(lineStream,cell);
+  cell.pop_back();
+  return_string.append(cell);
+  return_string.append("],Data:[");
 
   while(std::getline(data,line))
   {
       std::stringstream  lineStream(line);
       std::string        cell;
-      
-      if (i == 0){
-          i += 1;
-          continue;
-      }
-      j = 0;
 
+      std::getline(lineStream,cell,',');
+      row_labels.append(cell+",");
+
+      std::getline(lineStream,cell);
       return_string.append("[");
-
-      while(std::getline(lineStream,cell,','))
-      {
-          if (j == 0){
-              j += 1;
-              continue;
-          }
-          float weight = std::stof(cell);
-          return_string.append(std::to_string(weight)+",");
-          j += 1;
-
-      }
-      return_string.pop_back();
+      cell.pop_back();
+      return_string.append(cell);
       return_string.append("],");     
-      i += 1;
+
   }
 
   return_string.pop_back();
+  return_string.append("]");
+
+  row_labels.pop_back();
+  return_string.append(row_labels);
   return_string.append("]}");
 
   napi_value return_napi_string;
