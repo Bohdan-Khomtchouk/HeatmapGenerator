@@ -1,0 +1,10 @@
+{
+    "name": "download",
+    "version": "0.1.0",
+    "main": "download.js",
+    "R": "download.R",
+    "packageDependencies": [
+        "progress"
+    ]
+}
+

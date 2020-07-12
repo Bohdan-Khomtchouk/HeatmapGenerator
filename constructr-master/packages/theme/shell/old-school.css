@@ -1,0 +1,32 @@
+
+
+/** 
+ * no highlighting, just one color for user and one color for R.
+ * 
+ * NOTE: using a google web font, so this requires network.
+ * Cousine, by the great Steve Matteson, is metrically compatible
+ * with Courier New.  If that's useful to you.
+ */
+
+@import "https://fonts.googleapis.com/css?family=Cousine:400";
+
+.cm-s-old-school.CodeMirror {
+	font-family: "Cousine";
+	font-weight: 400;
+	font-size: 10.5pt;
+    background: white; 
+    color:red; 
+}
+
+.cm-s-old-school .shell-text, 
+	.cm-s-old-school .shell-system-information,
+	.cm-s-old-school .shell-error { 
+	color: darkblue; 
+}
+
+.cm-s-old-school .pager { 
+	color: black; 
+}
+
+
+

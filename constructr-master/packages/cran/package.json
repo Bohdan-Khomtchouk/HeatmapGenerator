@@ -1,0 +1,9 @@
+{
+    "name": "cran",
+    "version": "0.1.0",
+    "main": "cran.js",
+    "packageDependencies": [
+        "side-panel"
+    ]
+}
+

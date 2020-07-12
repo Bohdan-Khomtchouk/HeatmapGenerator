@@ -1,0 +1,7 @@
+{
+    "name": "progress",
+    "version": "0.1.0",
+    "main": "progress.js",
+    "R": "progress.R"
+}
+

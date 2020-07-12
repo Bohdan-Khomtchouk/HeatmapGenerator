@@ -1,0 +1,57 @@
+{
+	"MISSING_JSCLIENTLIB": [
+		"WARNING: The jsClientLib library is not available.  Many functions",
+		"in the shell depend on this library, and will not work as expected.",
+		"You can download the library from the git repository:",
+		"",
+		"https://github.com/sdllc/jsclientlib",
+		"",
+		""
+	],
+
+	"R_HOME_NOT_FOUND": [
+		"",
+		"We can't initialize R because R_HOME was not found.",
+		"",
+		"You can do one of the following:",
+		"",
+		" * use the command line argument --r-home=/path/to/R",
+		" * set an environment variable R_HOME",
+		" * use a version of ControlR that bundles R",
+		" * update your PATH to point to the R executable",
+		"" 
+	], 
+
+	"LOADING_MIRROR_LIST": "Loading mirror list, please wait...",
+	"SET_CRAN_MIRROR": "Set CRAN mirror",
+
+	"LOADING_STARTUP_FILE": "Loading startup file",
+
+	"ERROR_OCCURRED": "An error occurred.  Please try again later.",
+
+	"INSTALLED_FLAG": "(installed)",
+	"INSTALLING_PACKAGES": "Installing packages...\n",
+
+	"LOADING_PACKAGE_LIST": "Loading package list, please wait...",
+	"PLEASE_SELECT_MIRROR": "Please select a CRAN mirror before installing packages\n",
+
+	"TRYING_URL": "Trying URL",
+	"DOWNLOADING": "Downloading",
+	"DOWNLOAD_COMPLETE": "Download complete",
+	"DOWNLOAD_FAILED": "Download failed",
+
+    "SAVED_OK": "Saved OK",
+
+    "FIELD": "Field",
+    "CLASS": "Class",
+    "SIZE": "Size",
+    "VALUE": "Value",
+    "DETAILS": "Details",
+    "ADD_WATCH": "Add Watch",
+    "WATCHES": "Watches",
+    "LOCALS": "Locals",
+    "WATCH": "Watch",
+    "REMOVE_WATCH": "Remove watch"
+
+}
+

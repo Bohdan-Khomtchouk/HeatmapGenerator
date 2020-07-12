@@ -1,0 +1,1410 @@
+<!-- 
+
+ Copyright (c) 2016 Structured Data, LLC
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to 
+ deal in the Software without restriction, including without limitation the 
+ rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ sell copies of the Software, and to permit persons to whom the Software is 
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in 
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ IN THE SOFTWARE.
+
+-->
+
+<!-- 
+
+grid is a rewrite of the virtual list component for spreadsheet-like grids; 
+that is, two dimensional lists or matrices.  virtual scrolling is implemented
+in both dimensions.
+
+FIXME: back-merge in list so we don't have multiple components
+
+-->
+
+<dom-module id="grid-row">
+    <template>
+        <style>
+            
+            :host {
+                display: flex;
+                box-sizing: border-box;
+                padding: 0;
+                margin: 0;
+                border: 0;
+                position: relative;
+            }
+
+            .grid-cell {
+                border: 0;
+                box-sizing: border-box;
+                flex-grow: 1;
+                display: block;
+                padding: 2px;
+                margin: 0 1px 1px 0;
+                padding: 4px 3px 3px 3px;
+                position: relative;
+            }
+
+            .grid-row-header {
+                position: relative;
+                z-index: 5;
+                flex-grow: 0;
+                box-shadow: 1px 0px #ccc;
+            }
+            
+            .grid-cell.fixed-overflow {
+                flex-shrink: 1;
+                text-overflow: ellipsis;
+                overflow: hidden;
+            }
+
+            .selection-border {
+                position: absolute;
+                z-index: 3;
+            }
+
+            .selection-border-top {
+                top: 0px; left: 0px; width: 100%;
+            }
+
+            .selection-border-bottom {
+                bottom: 0px; left: 0px; width: 100%;
+            }
+
+            .selection-border-left {
+                top: 0px; left: 0px; height: 100%;
+            }
+
+            .selection-border-right {
+                top: 0px; right: 0px; height: 100%;
+            }
+
+            .grid-resize-target {
+                position: absolute;
+                z-index: 10;
+                cursor: col-resize;
+                height: 100%;
+                left: -5px;
+                width: 9px;
+                top: 0px;
+            }
+
+            .header-column-sort {
+                pointer-events: none;
+            }
+
+        </style>
+
+    </template>
+    <script>
+        Polymer({
+            is: "grid-row",
+
+            properties: {
+                cells: Array
+            },
+
+            create_cell: function( header, fixed ){
+                let elt = document.createElement( header ? "div" : "pre" );
+                elt.className = header ? "grid-cell grid-header" : "grid-cell table-cell fixed-width";
+                if( fixed ) elt.classList.add( "fixed-overflow" );
+                Polymer.dom( this.root ).appendChild( elt );
+
+                // capture class now, because polymer has appended scope
+                elt.baseClass = elt.className;
+                return elt;
+            },
+
+            measure: function( data, header ){
+                
+                let m = {
+                    row_length: 0,
+                    max_height: 0,
+                    cell_widths: []
+                };
+
+                if( this.mc ) Polymer.dom(this.root).removeChild( this.mc );
+                let mc = this.create_cell( header );
+
+                for( let i = 0; i< data.length; i++ ){
+                    
+                    mc.textContent = "M" + data[i].toString();
+
+                    let w = mc.offsetWidth;
+                    let h = mc.offsetHeight;
+
+                    m.cell_widths.push( w );
+                    m.row_length += w;
+                    m.max_height = Math.max( h, m.max_height );
+
+                    m.last_height = h; // allows for proper calculation of the margin
+
+                }
+
+                this.mc = mc;
+                return m;
+
+            },
+
+            /*
+            render: function( selection, column_classes, data, m, row, row_headers, label_width, first_col, last_col, left, header, resizable, fixed, hm, sort, precision ){
+
+                let index = 0;
+
+                if( row_headers ){
+
+                    // FIXME: fixed
+
+                    if( !this.row_header ){
+                        this.row_header = this.create_cell( true );
+                        this.row_header.classList.add( "grid-row-header");
+                    }
+
+                    this.row_header.style.minWidth = label_width + "px";
+                    this.row_header.style.left = left + "px";
+                    this.row_header.textContent = header ? " " : row_headers[row];
+                    this.row_header.row = row;
+                    this.row_header.col = -1;
+                    this.row_header.style.height = m.max_height + "px";
+
+                    if( header ){
+                        if( selection.rows && selection.columns )
+                            this.row_header.classList.add( "selected" );
+                        else this.row_header.classList.remove( "selected" );
+                    }
+                    else {
+                        if( selection.rows && selection.start.r <= row && selection.end.r >= row )
+                            this.row_header.classList.add( "selected" );
+                        else this.row_header.classList.remove( "selected" );
+                    }
+
+                } 
+
+                for( let i = first_col; i<= last_col; i++ ){
+
+                    if( this.cells.length <= index ){
+                        this.cells[index] = this.create_cell( header, fixed );
+                    }
+                    let cell = this.cells[index];
+
+                    if( fixed ){
+                        //cell.style.minWidth = m.pct[i] + "%";
+                        //cell.style.minWidth = `calc(${m.pct[i]}% - 3px)`;
+                        cell.style.minWidth = ( hm.cell_widths[i] + m.horizontal_margin ) + "px";
+                        cell.style.width = `calc(${m.pct[i]}% - 3px + ${m.drag_delta[i]}px)`;
+                        cell.style.flexBasis = `calc(${m.pct[i]}% - 3px + ${m.drag_delta[i]}px)`;
+                    }
+                    else {
+                        cell.style.minWidth = m.cell_widths[i] + "px";
+                        cell.style.flexBasis = ( m.cell_widths[i] + m.drag_delta[i] ) + "px";
+                    }
+
+                    // this is an interesting effect, and might be worth using.  it allocates
+                    // free space according to the calculated column widths.  the effect is 
+                    // a little strange in one case: the 10x10 null matrix with all zeros, because
+                    // column 10 has a wider header it gets more space, while the expected 
+                    // layout has all columns even.
+
+                    // something to thing about.  disabled atm.
+
+                    // cell.style.flexGrow = m.cell_widths[i] ;
+                    
+                    let val = ( header ? data[i] : data[i][row] );
+                    / *
+                    if( typeof val === "number" ){
+                        if( precision.fp >= 0 ) cell.textContent = val.toFixed( precision.fp );
+                        else cell.textContent = +val.toPrecision(precision.np);
+                    } 
+                    else * /
+                    cell.textContent = val.toString();
+ 
+                    if( fixed ){
+
+                        // this turns out to be incredibly slow for some reason, so we don't do it
+                        // for unfixed tables.  need to find a solution...
+
+                        if( cell.offsetWidth < cell.scrollWidth ) cell.setAttribute( "title", cell.textContent );
+                        else if( cell.hasAttribute("title")) cell.removeAttribute( "title" );
+                    }
+
+                    cell.style.display = "block";
+                    cell.row = header ? -1 : row;
+                    cell.col = i;
+                    cell.style.height = m.max_height + "px";
+
+                    if( header && sort && sort.col === i ){
+                        let span = document.createElement( "span" );
+                        span.className = "header-column-sort header-column-sort-" + (sort.asc?"ascending":"descending");
+                        span.textContent = data[i].toString();
+                        cell.textContent = "";
+                        Polymer.dom(cell).appendChild( span );
+                    }
+
+                    if( header && resizable && i ){
+                        let target = document.createElement( "div" );
+                        target.className = "grid-resize-target";
+                        target.dataColumn = i;
+                        Polymer.dom(cell).appendChild( target );
+                    }
+
+                    // rather than manipulate classes via the list API we'll build 
+                    // Q: is this actually more efficient?
+
+                    let className = cell.baseClass;
+
+                    if( header ){
+                        if( selection.start.c <= i && selection.end.c >= i && selection.columns ){
+                            className += " selected";
+                        }
+                    }
+                    else {
+
+                        if( column_classes ){
+                            / *
+                            if( column_classes[i] === "date" ) className += " table-cell-date";
+                            if( column_classes[i] === "string" ) className += " table-cell-string";
+                            if( column_classes[i] === "factor" ) className += " table-cell-factor";
+                            * /
+                            className += " table-cell-" + column_classes[i];
+                        }
+
+                        if( selection.start.c <= i && selection.end.c >= i
+                            && selection.start.r <= row && selection.end.r >= row ){
+                                
+                                className += " selected";
+                                
+                                if( selection.start.r === row ){
+                                    let cst = document.createElement( "div" );
+                                    cst.className = "selection-border selection-border-top";
+                                    cst.style.width = `calc(100% + ${m.horizontal_margin}px)`;
+                                    Polymer.dom(cell).appendChild( cst );
+                                } 
+                                if( selection.end.r === row ){
+                                    let cst = document.createElement( "div" );
+                                    cst.className = "selection-border selection-border-bottom";
+                                    cst.style.width = `calc(100% + ${m.horizontal_margin}px)`;
+                                    cst.style.bottom = `-${m.horizontal_margin}px`;
+                                    Polymer.dom(cell).appendChild( cst );
+                                } 
+                                if( selection.start.c === i ){
+                                    let cst = document.createElement( "div" );
+                                    cst.className = "selection-border selection-border-left";
+                                    cst.style.height = `calc(100% + ${m.vertical_margin}px)`;
+                                    Polymer.dom(cell).appendChild( cst );
+                                } 
+                                if( selection.end.c === i ){
+                                    let cst = document.createElement( "div" );
+                                    cst.className = "selection-border selection-border-right";
+                                    cst.style.height = `calc(100% + ${m.vertical_margin}px)`;
+                                    cst.style.right = `-${m.vertical_margin}px`;
+                                    Polymer.dom(cell).appendChild( cst );
+                                } 
+
+                        }
+                    }
+                    cell.className = className;
+                    index++;
+                }
+                for( let i = index; i< this.cells.length; i++ ){
+                    this.cells[i].style.display = "none";
+                }
+
+            },
+            */
+
+            render: function(args){ 
+           
+                let index = 0;
+
+                let selection = args.selection;
+                let m = args.measurements;
+                let row = args.row;
+                let header = args.header;
+
+                if( args.row_headers ){
+
+                    // FIXME: fixed
+
+                    if( !this.row_header ){
+                        this.row_header = this.create_cell( true );
+                        this.row_header.classList.add( "grid-row-header");
+                    }
+
+                    this.row_header.style.minWidth = args.label_width + "px";
+                    this.row_header.style.left = args.left + "px";
+                    this.row_header.textContent = header ? " " : args.row_headers[row];
+                    this.row_header.row = row;
+                    this.row_header.col = -1;
+                    this.row_header.style.height = m.max_height + "px";
+
+                    if( header ){
+                        if( selection.rows && selection.columns )
+                            this.row_header.classList.add( "selected" );
+                        else this.row_header.classList.remove( "selected" );
+                    }
+                    else {
+                        if( selection.rows && selection.start.r <= row && selection.end.r >= row )
+                            this.row_header.classList.add( "selected" );
+                        else this.row_header.classList.remove( "selected" );
+                    }
+
+                } 
+
+                for( let i = args.first_col; i<= args.last_col; i++ ){
+
+                    if( this.cells.length <= index ){
+                        this.cells[index] = this.create_cell( header, args.fixed );
+                    }
+                    let cell = this.cells[index];
+
+                    if( args.fixed ){
+                        //cell.style.minWidth = m.pct[i] + "%";
+                        //cell.style.minWidth = `calc(${m.pct[i]}% - 3px)`;
+                        cell.style.minWidth = ( args.hm.cell_widths[i] + m.horizontal_margin ) + "px";
+                        cell.style.width = `calc(${m.pct[i]}% - 3px + ${m.drag_delta[i]}px)`;
+                        cell.style.flexBasis = `calc(${m.pct[i]}% - 3px + ${m.drag_delta[i]}px)`;
+                    }
+                    else {
+                        cell.style.minWidth = m.cell_widths[i] + "px";
+                        cell.style.flexBasis = ( m.cell_widths[i] + m.drag_delta[i] ) + "px";
+                    }
+
+                    // this is an interesting effect, and might be worth using.  it allocates
+                    // free space according to the calculated column widths.  the effect is 
+                    // a little strange in one case: the 10x10 null matrix with all zeros, because
+                    // column 10 has a wider header it gets more space, while the expected 
+                    // layout has all columns even.
+
+                    // something to thing about.  disabled atm.
+
+                    // cell.style.flexGrow = m.cell_widths[i] ;
+                    
+                    let val = ( header ? args.data[i] : args.data[i][row] );
+                    cell.textContent = val.toString();
+ 
+                    if( args.fixed ){
+
+                        // this turns out to be incredibly slow for some reason, so we don't do it
+                        // for unfixed tables.  need to find a solution...
+
+                        if( cell.offsetWidth < cell.scrollWidth ) cell.setAttribute( "title", cell.textContent );
+                        else if( cell.hasAttribute("title")) cell.removeAttribute( "title" );
+                    }
+
+                    cell.style.display = "block";
+                    cell.row = header ? -1 : row;
+                    cell.col = i;
+                    cell.style.height = m.max_height + "px";
+
+                    if( header && args.sort && args.sort.col === i ){
+                        let span = document.createElement( "span" );
+                        span.className = "header-column-sort header-column-sort-" + (args.sort.asc?"ascending":"descending");
+                        span.textContent = args.data[i].toString();
+                        cell.textContent = "";
+                        Polymer.dom(cell).appendChild( span );
+                    }
+
+                    if( header && args.resizable && i ){
+                        let target = document.createElement( "div" );
+                        target.className = "grid-resize-target";
+                        target.dataColumn = i;
+                        Polymer.dom(cell).appendChild( target );
+                    }
+
+                    // rather than manipulate classes via the list API we'll build 
+                    // Q: is this actually more efficient?
+
+                    let className = cell.baseClass;
+
+                    if( header ){
+                        if( selection.start.c <= i && selection.end.c >= i && selection.columns ){
+                            className += " selected";
+                        }
+                    }
+                    else {
+
+                        if( args.column_classes ){
+                            className += " table-cell-" + args.column_classes[i];
+                        }
+
+                        if( selection.start.c <= i && selection.end.c >= i
+                            && selection.start.r <= row && selection.end.r >= row ){
+                                
+                                className += " selected";
+                                
+                                if( selection.start.r === row ){
+                                    let cst = document.createElement( "div" );
+                                    cst.className = "selection-border selection-border-top";
+                                    cst.style.width = `calc(100% + ${m.horizontal_margin}px)`;
+                                    Polymer.dom(cell).appendChild( cst );
+                                } 
+                                if( selection.end.r === row ){
+                                    let cst = document.createElement( "div" );
+                                    cst.className = "selection-border selection-border-bottom";
+                                    cst.style.width = `calc(100% + ${m.horizontal_margin}px)`;
+                                    cst.style.bottom = `-${m.horizontal_margin}px`;
+                                    Polymer.dom(cell).appendChild( cst );
+                                } 
+                                if( selection.start.c === i ){
+                                    let cst = document.createElement( "div" );
+                                    cst.className = "selection-border selection-border-left";
+                                    cst.style.height = `calc(100% + ${m.vertical_margin}px)`;
+                                    Polymer.dom(cell).appendChild( cst );
+                                } 
+                                if( selection.end.c === i ){
+                                    let cst = document.createElement( "div" );
+                                    cst.className = "selection-border selection-border-right";
+                                    cst.style.height = `calc(100% + ${m.vertical_margin}px)`;
+                                    cst.style.right = `-${m.vertical_margin}px`;
+                                    Polymer.dom(cell).appendChild( cst );
+                                } 
+
+                        }
+                    }
+                    cell.className = className;
+                    index++;
+                }
+                for( let i = index; i< this.cells.length; i++ ){
+                    this.cells[i].style.display = "none";
+                }
+
+            },
+
+            created: function(){
+                this.cells = [];
+            }
+
+        });
+    </script>
+</dom-module>
+
+<dom-module id="display-grid">
+    <template>
+        <style>
+
+            :host {
+                flex-grow: 1;
+                outline: none;
+                overflow: hidden;
+                position: relative;
+                box-sizing: border-box;
+                border: 0;
+                padding: 0;
+                margin: 0;
+            }
+
+            #grid-area {
+                box-sizing: border-box;
+                position: absolute;
+                overflow: scroll;
+                top: 0px;
+                left: 0px;
+                right: 0px;
+                bottom: 0px;
+                border: 0;
+                display: flex;
+                flex-direction: row;
+            }
+
+            #grid-columns {
+                display: flex;
+                flex-grow: 1;
+                box-sizing: border-box;
+            }
+
+            #grid-rows {
+                position: static;
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                border: 0;
+                flex-grow: 1;
+            }
+
+            #grid-area.fixed-overflow {
+                overflow-x: hidden;
+            }
+
+            #grid-area.fixed-overflow > #grid-columns {
+                max-width: 100%;
+            }
+
+            #grid-area.fixed-overflow > #grid-columns > #grid-rows {
+                max-width: 100%;
+            }
+
+            #measurement-node {
+                position: absolute;
+                top: -210px;
+                left: -210px;
+                overflow: visible;
+                z-index: 2;
+            }
+
+            #grid-column-header {
+                position: relative;
+                top: 0px;
+                z-index: 7;
+            }
+
+            #grid-row-header-background {
+                position: absolute;
+                top: 0px;
+                left: 0px;
+                width: 100px;
+                height: 100%;
+                z-index: 4;
+            }
+
+        </style>
+
+        <div id='grid-area'>
+            <div id='grid-columns'>
+                <div id='grid-rows'>
+                    <div id='grid-row-header-background'></div>
+                </div>
+            </div>
+        </div>
+
+        <div id='measurement-node'></div>
+
+    </template>
+    <script>
+
+        Polymer({
+            is: "display-grid",
+
+            properties: {
+
+                "layout-event-handler": {
+                    type: Boolean,
+                    value: true,
+                    reflectToAttribute: true
+                },
+
+                template: {
+                    type: String,
+                    value: "grid-row"
+                },
+                resizeColumns: {
+                    type: Boolean,
+                    value: true // false
+                },
+                selectCells: {
+                    type: Boolean, 
+                    value: true
+                },
+                selectRows: {
+                    type: Boolean, 
+                    value: false
+                },
+                /*
+                fixedPrecision: {
+                    type: Number, 
+                    value: -1
+                },
+                numberPrecision: {
+                    type: Number,
+                    value: 7
+                },
+                */
+                sortColumn: -1, 
+                sortAscending: false
+            },
+
+            listeners: {
+                'layout': 'onlayout'
+            },
+
+            onlayout: function(){
+
+                // not if we have not yet initialized                
+                if( this.grid_measurements ) this.refresh();
+
+            },
+
+            clear_selection: function(){
+                this.select( -1, -1 );
+            },
+
+            patch_selection: function(){
+                if( this.selection.columns ){
+                    this.selection.end.r = this.row_count-1;
+                }
+                if( this.selection.rows ){
+                    this.selection.end.c = this.col_count-1;
+                }
+            },
+
+            select_range: function( r1, c1, r2, c2, columns, rows ){
+                this.selection = {
+                    start: { r: r1, c: c1 },
+                    end: { r: r2, c: c2 },
+                    columns: columns,
+                    rows: rows
+                }
+            },
+
+            select_columns: function( c1, c2 ){
+                this.select_range( 0, c1, this.row_count - 1, c2, true, false );
+            },
+
+            select_rows: function( r1, r2 ){
+                this.select_range( r1, 0, r2, this.col_count - 1, false, true );
+            },
+
+            select_all: function(){
+                this.select_range( 0, 0, this.row_count-1, this.col_count - 1, true, true );
+            },
+
+            select: function( r, c ){
+                this.select_range( r, c, r, c );
+            },
+
+            copy_selection: function(){
+
+                // this is one place where column-dominant 
+                // array is not helpful (didn't we have a fast
+                // matrix transpose at one point?)
+
+                if( this.selection.start.r < 0 || this.selection.end.r < 0 ) return;
+
+                let data = [];
+                for( let r = this.selection.start.r; r<= this.selection.end.r; r++ ){
+                    let line = [];
+                    for( let c = this.selection.start.c; c<= this.selection.end.c; c++ ){
+                        line.push( this.data[c][r].toString());
+                    }
+                    data.push( line.join( "\t" ));
+                }
+                
+                const {clipboard} = require('electron');
+                clipboard.writeText(data.join("\n"));
+
+            },
+
+            keydown: function(e){
+
+                if( e.keyCode === 27 ){ // escape
+                    this.clear_selection();
+                    this.refresh();
+                }
+                else if( e.keyCode === 65 && e.ctrlKey ){
+                    
+                    if( !this.selectCells ) return;
+
+                    this.select_all();
+                    this.refresh();
+                }
+                else if( e.keyCode === 67 && e.ctrlKey ){
+                    this.copy_selection();
+                }
+                else if( e.keyCode == 33 ){ // page up
+                    let area = this.$['grid-area'];
+                    if( e.shiftKey ){
+                        area.scrollLeft = Math.max( 0, area.scrollLeft - area.clientWidth );
+                    }
+                    else {
+                        area.scrollTop = Math.max( 0, area.scrollTop - area.clientHeight );
+                    }
+                }
+                else if( e.keyCode == 34 ){ // page down
+                    let area = this.$['grid-area'];
+                    if( e.shiftKey ){
+                        area.scrollLeft = area.scrollLeft + area.clientWidth;
+                    }
+                    else {
+                        area.scrollTop = area.scrollTop + area.clientHeight;
+                    }
+                }
+                else if( e.keyCode == 37 ){ // left
+                    let area = this.$['grid-area'];
+                    area.scrollLeft = Math.max( 0, area.scrollLeft - 90 );
+                }
+                else if( e.keyCode == 38 ){ // up
+                    let area = this.$['grid-area'];
+                    area.scrollTop = Math.max( 0, area.scrollTop - this.grid_measurements.line_height );
+                }
+                else if( e.keyCode == 39 ){ // right
+                    let area = this.$['grid-area'];
+                    area.scrollLeft = area.scrollLeft + 90;
+                }
+                else if( e.keyCode == 40 ){ // down
+                    let area = this.$['grid-area'];
+                    area.scrollTop = ( area.scrollTop + this.grid_measurements.line_height );
+                }
+
+                else return;
+
+                e.stopPropagation();
+                e.preventDefault();
+
+            },
+
+            resize_column: function( target, dx ){
+
+                let m = this.grid_measurements;
+                let x = this.col_count-target;
+                
+                for( let i = target; i< this.col_count; i++ ){
+                    m.drag_delta[i] -= dx/x;
+                }
+                
+                m.drag_delta[target-1] += dx;
+                this.refresh();
+                return true;
+
+            },
+
+            column_drag: function(e){
+                e.stopPropagation();
+                e.preventDefault();
+
+                if( null === this.pos ){
+                    this.pos = e.clientX;
+                    return;
+                }
+
+                let dx = e.clientX - this.pos;
+                if( this.table.resize_column( this.col, dx ))
+                    this.pos = e.clientX;
+
+            },
+
+            column_end_drag: function(e){
+
+                e.stopPropagation();
+                e.preventDefault();
+
+                this.removeEventListener( "mousemove", this.table.column_drag );
+                this.removeEventListener( "mouseup", this.table.column_end_drag );
+                this.removeEventListener( "mouseleave", this.table.column_end_drag );
+
+                this.table = null;
+                this.style.display = "none";
+
+            },
+
+            start_column_resize: function(e){
+
+                // console.info( "Resize column", e.target.dataColumn );
+
+                // resizers are set to the LEFT side of a column header, and
+                // skip the first column.  so for resizer set on column X, adjust
+                // columns X and X-1.
+
+                let col = e.target.dataColumn;
+
+                this.current_width = [];
+                let first_row = this.querySelector( "grid-row" );
+                let children = first_row.children;
+                for( let i = 0; i< children.length; i++ ){
+                    if( children[i].col === col || children[i].col === col-1 ){
+                        this.current_width[ children[i].col ] = children[i].offsetWidth;
+                    }
+                }
+                // console.info( "CW", this.current_width );
+
+                let mouse_target = document.querySelector( "#shared-mouse-target" );
+
+                if( !mouse_target ){
+                    mouse_target = document.createElement( "div" );
+                    mouse_target.id = "shared-mouse-target";
+                    mouse_target.setAttribute( "style", "position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; z-index: 999; " );
+                    document.body.appendChild( mouse_target );
+                }
+                mouse_target.style.display = "block";
+
+                // this doesn't work for some reason?
+                // mouse_target.style.cursor = e.target.style.cursor;
+                mouse_target.style.cursor = "col-resize";
+
+                mouse_target.table = this;
+                mouse_target.col = col;
+                mouse_target.pos = null;
+
+                mouse_target.addEventListener( "mousemove", this.column_drag );
+                mouse_target.addEventListener( "mouseup", this.column_end_drag );
+                mouse_target.addEventListener( "mouseleave", this.column_end_drag );
+
+            },
+
+            mousedown: function(e){
+
+                if( e.target.className.match( /grid-resize-target/ )){
+                    e.stopPropagation();
+                    e.preventDefault();
+                    this.focus();
+                    return this.start_column_resize(e);
+                }
+                if( this.selectRows ){
+
+                    let r = e.target.row;
+                    if( typeof r === "undefined" ) return;
+
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    this.focus();
+                    this.select_rows(r, r);
+                    this.refresh();
+
+                    return;
+                }
+
+                if( !this.selectCells ) return;
+                
+                e.stopPropagation();
+                e.preventDefault();
+                this.focus();
+
+                if( !e.target.className.match( /grid-cell/ )){
+                    return;
+                }
+
+                let row = e.target.row;
+                let col = e.target.col;
+
+                if( row === -1 && col === -1 ){
+                    clear_selection();
+                    return;
+                }
+                else if( row === -1 ){
+                    this.select_columns( col, col );
+                    this.f = this.move_columns;
+                }
+                else if( col === -1 ){
+                    this.select_rows( row, row );
+                    this.f = this.move_rows;
+                }
+                else {
+                    this.select( row, col );
+                    this.f = this.move_table; 
+                }
+
+                this.listen( this, 'mousemove', 'f' );
+                this.current_selection = [ row, col ];
+                this.selection_start = [ row, col ];
+                this.listen( this, 'mouseup', 'mouseup' );
+                this.listen( this, 'mouseleave', 'mouseup' );
+                
+                this.refresh();
+            },
+
+            mouseup: function(e){
+                e.stopPropagation();
+                e.preventDefault();
+                this.unlisten( this, 'mousemove', 'f' );
+                this.unlisten( this, 'mouseup', 'mouseup' );
+                this.unlisten( this, 'mouseleave', 'mouseup' );
+            },
+
+            move_columns: function(e){
+                e.stopPropagation();
+                e.preventDefault();
+
+                if( typeof e.target.row === "undefined" ) return;
+
+                let row = Math.max( 0, e.target.row );
+                let col = Math.max( 0, e.target.col );
+
+                if( col === this.current_selection[1] ) return;
+                this.select_columns( Math.min( col, this.selection_start[1] ),
+                    Math.max( col, this.selection_start[1] ));
+
+                this.current_selection = [ row, col ];
+                this.refresh();
+            },
+
+            move_rows: function(e){
+                e.stopPropagation();
+                e.preventDefault();
+
+                if( typeof e.target.row === "undefined" ) return;
+
+                let row = Math.max( 0, e.target.row );
+                let col = Math.max( 0, e.target.col );
+
+                if( row === this.current_selection[0] ) return;
+                this.select_rows( 
+                    Math.min( row, this.selection_start[0] ),
+                    Math.max( row, this.selection_start[0] ));
+
+                this.current_selection = [ row, col ];
+                this.refresh();
+
+            },
+
+            move_table: function(e){
+                e.stopPropagation();
+                e.preventDefault();
+
+                if( typeof e.target.row === "undefined" ) return;
+
+                let row = Math.max( 0, e.target.row );
+                let col = Math.max( 0, e.target.col );
+
+                if( row === this.current_selection[0] && col === this.current_selection[1] ) return;
+
+                // (maybe) more efficient: flush and recreate
+                this.select_range( 
+                    Math.min( row, this.selection_start[0] ), 
+                    Math.min( col, this.selection_start[1] ), 
+                    Math.max( row, this.selection_start[0] ), 
+                    Math.max( col, this.selection_start[1] ));
+
+                this.current_selection = [ row, col ];
+                this.refresh();
+
+            },
+
+            get_selection: function(){
+
+                let copy = {};
+                for( let i in this.selection ){ copy[i] = this.selection[i]; }
+                return copy;
+
+            },
+
+            sort: function( column, ascending ){
+
+                this.sortColumn = column;
+                this.sortAscending = ascending;
+
+                this.sort_internal();
+                this.refresh();
+            },
+
+            sort_internal: function(){
+
+                let rank = new Array( this.row_count );
+                let column = this.sortColumn;
+                this.rank = new Array( this.row_count );
+
+                if( column >= 0 ){
+                    if( this.column_classes && 
+                        ( this.column_classes[column] === "string" || this.column_classes[column] === "factor" )){
+                        for( let i = 0; i< this.row_count; i++ ){
+                            rank[i] = [ this.data[column][i].toString().toLowerCase(), i ];
+                        }
+                    }
+                    else {
+                        for( let i = 0; i< this.row_count; i++ ){
+                            rank[i] = [ this.data[column][i], i ];
+                        }
+                    }
+                    rank.sort( function( a, b ){ return ( a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0 )); });
+                    if( this.sortAscending ) rank.reverse();
+                    for( let i = 0; i< this.row_count; i++ ) this.rank[i] = rank[i][1];
+                }
+                else {
+                    for( let i = 0; i< this.row_count; i++ ) this.rank[i] = i;
+                }
+
+            },
+
+            update: function(opts, force, preserve_selection ){
+
+                // force boolean
+                this.cache_fixed = !!this.fixed;
+
+                Object.keys(opts).forEach( function( key ){
+                    if( key !== "row_headers" && key !== "column_headers" )
+                        this[key] = opts[key];
+                }, this);
+
+                // force boolean
+                this.fixed = !!this.fixed;
+
+                // FIXME: just cascade
+
+                if( this.fixed ){
+                    this.$['grid-area'].classList.add( "fixed-overflow" );
+                }
+                else {
+                    this.$['grid-area'].classList.remove( "fixed-overflow" );
+                }
+
+                if( opts.row_headers && typeof opts.row_headers === "boolean" ){
+                    if( !this.row_headers || this.row_headers.length !== this.data[0].length ){
+                        this.row_headers = new Array( this.data[0].length );
+                        for( let i = 0; i< this.row_headers.length; i++ ) this.row_headers[i] = i+1;
+                    }
+                }
+                else this.row_headers = opts.row_headers;
+
+                if( opts.column_headers && typeof opts.column_headers === "boolean" ){
+                    if( !this.column_headers || this.column_headers.length !== this.data.length ){
+                        this.column_headers = new Array( this.data.length );
+                        for( let i = 0; i< this.column_headers.length; i++ ) this.column_headers[i] = "V" + (i+1);
+                    }
+                }
+                else this.column_headers = opts.column_headers;
+
+                // how expensive is this?
+                /*
+                let ch = opts.column_headers ? opts.column_headers.toString() : "";
+                let rh = opts.row_headers ? opts.row_headers.toString() : "";
+                */
+
+                if( (this.col_count !== this.data.length)
+                    || ( this.cache_fixed !== this.fixed )
+                  //|| this.ch_cache !== ch 
+                  //|| this.rh_cache !== rh 
+                    || force  ){
+
+                    this.col_count = this.data.length; 
+                    this.row_count = this.data[0].length;
+                    
+                    if( !preserve_selection || !this.selection ) this.clear_selection();
+                    this.measure();
+
+                    //this.ch_cache = ch;
+                    //this.rh_cache = rh;
+                }
+                else {
+
+                    // if you're not measuring, at least update the height in case of
+                    // rows being added/removed.  especially visible when callign 
+                    // rm(list=ls()) on a large number of fields.
+
+                    // I don't think col_count could ever not trigger a measurement, though.
+
+                    this.col_count = this.data.length; 
+                    this.row_count = this.data[0].length;
+                    this.grid_measurements.total_height = ( this.row_count + ( this.column_headers ? 1 : 0 )) * this.grid_measurements.line_height;
+                }
+                
+                this.patch_selection();
+
+                this.$['grid-row-header-background'].style.display = 
+                    this.row_headers ? "block" : "none";
+
+                this.sort_internal();
+
+                this.refresh();
+            },
+
+            measure: function(){
+
+                if( !this.measurement ){
+                    this.measurement = document.createElement( this.template );
+                    Polymer.dom( this.$['measurement-node'] ).appendChild( this.measurement );
+                }
+
+                // FIXME: also tallest; for longest, take into account linebreaks
+                // FIXME: there's no need for column headers to be multiple lines to match rows
+
+                let newlines = 0;
+                //let hr1 = process.hrtime();
+
+                this.maxdecimal = 0;
+
+                //let HR = process.hrtime();
+
+                let longest = this.data.map( function( col, cindex ){
+
+                    let max = 0;
+                    let t = typeof( col[0] );
+
+                    if( t === "number" ){
+                        for( let i = 0; i< col.length; i++ ){
+                            max = Math.max( max, col[i].toString().length ); // should be toPrecision, but that's too slow!
+                        }
+                        return "X".repeat(max);
+                    }
+                    else {
+                        if( col.toString().indexOf("\n") < 0 ){
+                            for( let i = 0; i< col.length; i++ ) max = Math.max( max, col[i].toString().length );
+                            return "X".repeat(max);
+                        }
+                        else {
+
+                            // there's got to be a better way to do this
+
+                            for( let i = 0; i< col.length; i++ ){
+                                let s = col[i].toString().split("\n" );                        
+                                for( let j = 0; j< s.length; j++ ) max = Math.max( max, s[j].length );
+                                if( s.length > 1 ) newlines = Math.max( newlines, s.length - 1 );
+                            };
+                            return "\n".repeat(newlines) + "X".repeat(max);
+                        }
+                    }
+                    return tmp[0]; // ??
+                });
+                
+                //HR = process.hrtime(HR);
+                //console.info("elapsed (2): %ds %dms", HR[0], HR[1]/1000000);
+
+                let m = this.measurement.measure( longest );
+                m.drag_delta = new Array( this.data.length );
+                for( let i = 0; i< m.drag_delta.length; i++ ) m.drag_delta[i] = 0;
+
+                m.vertical_margin = this.measurement.offsetHeight - m.last_height;
+                m.horizontal_margin = this.measurement.offsetWidth - m.cell_widths[this.col_count-1];
+
+                let tmp, x;
+
+                if( this.row_headers ){
+                    tmp = this.row_headers.slice(0);
+                    tmp.sort( function( a, b ){ return b.toString().length - a.toString().length; });
+                    x = this.measurement.measure( [tmp[0]], true );
+                    this.row_header_width = x.cell_widths[0];
+                }
+                else this.row_header_width = 0;
+
+                if( this.column_headers ){
+
+                    x = this.measurement.measure( this.column_headers, true );
+                    x.vertical_margin = this.measurement.offsetHeight - x.last_height;
+                    x.horizontal_margin = this.measurement.offsetWidth - x.cell_widths[this.column_headers.length-1];
+
+                    if( x.max_height > m.max_height ){
+                        m.max_height = x.max_height;
+                    }
+
+                    m.row_length = 0;
+                    for( let i = 0; i< this.col_count; i++ ){
+                        m.cell_widths[i] = Math.max( m.cell_widths[i], x.cell_widths[i] );
+                        m.row_length += m.cell_widths[i];
+                    }
+                    this.header_measurements = x;
+                }
+
+                m.line_height = m.max_height + m.vertical_margin;
+                m.total_height = ( this.row_count + ( this.column_headers ? 1 : 0 )) * m.line_height;
+                m.total_width = (this.col_count * m.horizontal_margin) + m.row_length;
+
+                if( this.fixed ){
+
+                    // FIXED means force the table to be the same width as the containing node,
+                    // notwithstanding individual column widths.  for that to work, we set 
+                    // widths as percentages of the whole instead of pixel widths.  (FIXME: drag?)
+
+                    // FIXME: adjust for row headers
+
+                    m.pct = [];
+                    let sum = 0;
+                    let factor = 10000;
+
+                    for( let i = 0; i< this.col_count - 1; i++ ){
+                        m.pct[i] = 100 * Math.round((m.cell_widths[i] + m.horizontal_margin) / m.total_width * factor) / factor;
+                        sum += m.pct[i];
+                    }
+                    m.pct[ this.col_count-1 ] = 100-sum;
+
+                }
+
+                this.grid_measurements = m;
+
+            },
+
+            refresh: function(force_update){
+                let instance = this;
+                requestAnimationFrame(function(){
+                    instance.render(force_update);
+                });
+            },
+
+            attached: function(){
+                //console.info( "Attached" );
+                this.nodes = [];
+                if( !this.repaint ) this.repaint = this.refresh.bind(this);
+    			this.$['grid-area'].addEventListener('scroll', this.repaint);
+                this.tabIndex = 0;
+                if( this.grid_measurements ){
+                    this.refresh( true );
+                }
+
+                this.listen( this, 'mousedown', 'mousedown' );
+                this.listen( this, 'keydown', 'keydown' );
+
+	    	},
+		
+            detached: function(){
+
+                //console.info( "Detached" );
+                this.$['grid-area'].removeEventListener('scroll', this.repaint);
+
+                this.unlisten( this, 'mousedown', 'mousedown' );
+                this.unlisten( this, 'keydown', 'keydown' );
+
+                // dump some nodes that get "lost" to force a rebuild
+                // if we come back
+
+                let grid = this.$['grid-rows'];
+                
+                Polymer.dom( grid ).children.forEach( function( child ){
+                    Polymer.dom( grid ).removeChild( child );
+                });
+                this.nodes = [];
+
+                if( this.measurement )
+                    Polymer.dom( this.$['measurement-node'] ).removeChild( this.measurement );
+                this.measurement = null;
+
+                // ??
+                if( this.header_row ){
+                    //console.info( "HR parent (1)?", Polymer.dom(this.header_row).parentNode );
+                    //console.info( "HR parent (2)?", this.header_row.parentNode );
+                    //Polymer.dom( grid ).removeChild( this.header_row );
+                }
+                this.header_row = null;
+                
+            },
+
+            render: function( ){
+
+                let m = this.grid_measurements;
+                let area = this.$['grid-area'];
+                let grid = this.$['grid-rows'];
+                let cols = this.$['grid-columns'];
+
+                let buffer = 2;
+                let top = area.scrollTop;
+                let first_row = Math.max( 0, Math.floor( top / m.line_height ) - buffer );
+
+                // preserve even/odd for styling rules
+                if( first_row % 2 === 1 ) first_row--;
+
+                // set margin
+                let margin_top = ( m.line_height * first_row );
+                grid.style.paddingTop = margin_top + "px";
+
+                let first_col = 0;
+                let last_col = this.col_count - 1;
+
+                let padding_left = 0;
+                let padding_right = 0;
+                let left = area.scrollLeft - 20;
+                let right = area.scrollLeft + area.clientWidth + 20;
+                let sum = 0;
+
+                if( !this.fixed ){
+
+                    for( let i = 0; i< this.col_count-1; i += 2, first_col += 2 ){
+                        let w = m.cell_widths[i] + m.cell_widths[i+1] + (2*m.horizontal_margin);
+                        if( sum + w >= left ) break;
+                        padding_left += w;
+                        sum += w;
+                    }
+
+                    for( last_col = first_col; sum < right && last_col< this.col_count; last_col++ ){
+                        sum += (m.cell_widths[last_col] + m.horizontal_margin);
+                    }
+                    last_col = Math.min( last_col, this.col_count-1 );
+
+                    for( let i = last_col + 1; i< this.col_count; i++ ){
+                        padding_right += (m.cell_widths[i] + m.horizontal_margin);
+                    }
+
+                    cols.style.paddingLeft = padding_left + "px";
+                    cols.style.paddingRight = padding_right + "px";
+                    cols.style.minWidth = m.total_width + "px";
+
+                }
+
+                let height = area.clientHeight + 2 * buffer * m.line_height; 
+                let index = 0;
+
+                left = area.scrollLeft - padding_left;
+
+                render_args = {
+                    selection: this.selection,
+                    column_classes: this.column_classes,
+                    measurements: m,
+                    row_headers: this.row_headers ? " " : null,
+                    label_width: this.row_header_width,
+                    first_col: first_col,
+                    last_col: last_col,
+                    left: left,
+                    resizable: this.resizeColumns, 
+                    fixed: this.fixed,
+                    hm: this.header_measurements,
+                    sort: { col: this.sortColumn, asc: this.sortAscending },
+                    precision: null,
+                    html: false 
+                };
+
+                if( this.column_headers ){
+
+                    // render column header
+                    if( !this.header_row ){
+                        this.header_row = document.createElement( this.template );
+                        this.header_row.setAttribute("id", "grid-column-header" );
+                        this.header_row.style.minHeight = m.max_height + "px";
+                        Polymer.dom( grid ).appendChild( this.header_row );
+                    }
+
+                    render_args.header = true;
+                    render_args.data = this.column_headers;
+                    render_args.row = -1;
+
+                    this.header_row.render( render_args );
+
+                    this.header_row.style.top = ( area.scrollTop - margin_top ) + "px";
+                    this.header_row.style.display = null;
+                    //if( this.fixed ) this.header_row.style.width = area.clientWidth + "px";
+                }
+                else if( this.header_row ){
+                    this.header_row.style.display = "none";
+                }
+
+                this.selection.r = undefined;
+
+                render_args.header = false;
+                render_args.data = this.data;
+                render_args.row_headers = this.row_headers;
+                render_args.resizable = false;
+                render_args.sort = null;
+
+                // render rows
+                while( height > 0 && first_row < this.row_count ){
+                    if( index >= this.nodes.length ){
+                        this.nodes[index] = document.createElement( this.template );
+                        Polymer.dom( grid ).appendChild( this.nodes[index] );
+                    }
+
+                    render_args.row = this.rank[first_row];
+
+                    this.nodes[index].render( render_args );
+
+                    this.nodes[index].style.display = "flex";
+                    //if( this.fixed ) this.nodes[index].style.width = area.clientWidth + "px";
+
+                    index++;
+                    first_row++;
+
+                    height -= ( m.max_height + m.vertical_margin );
+                }
+                for( ; index < this.nodes.length; index++ ){ 
+                    this.nodes[index].style.display = "none";
+                }
+
+                if( this.row_headers ){
+                    
+                    let rhb = this.$['grid-row-header-background'];
+
+                    rhb.style.left = left + "px";
+                    rhb.style.top = area.scrollTop + "px";
+                    rhb.style.width = ( this.row_header_width + m.horizontal_margin ) + "px";
+                }
+
+                grid.style.height = m.total_height + "px";
+
+            }
+
+        });
+    </script>
+</dom-module>

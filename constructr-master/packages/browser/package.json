@@ -1,0 +1,16 @@
+{
+    "name": "browser",
+    "version": "0.1.0",
+    "main": "browser.js",
+    "packageDependencies": [
+        "side-panel"
+    ],
+    "preferences": {
+        "browser.panel": {
+            "type": "boolean",
+            "default": false,
+            "label": "Use browser panel" 
+        }
+    }
+}
+

@@ -1,0 +1,231 @@
+<!--
+
+ Copyright (c) 2016 Structured Data, LLC
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to 
+ deal in the Software without restriction, including without limitation the 
+ rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ sell copies of the Software, and to permit persons to whom the Software is 
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in 
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ IN THE SOFTWARE.
+
+-->
+
+<!-- 
+
+	implementation of a "virtual list", a list which doesn't actually
+	render all entries (for performance purposes).
+
+	the list takes a "data" array and a "template" string.  template 
+	is a tag name, default "div", which will be used for each entry in 
+	the list.  the data elements are applied to each element:
+
+	(1) if the data elements are strings, sets .textContent.
+
+	(2) otherwise properties are set by name; either define node 
+		properties or use standard properties 'textContent', 'innerHTML', 
+		'className', &c.
+		
+	nodes are not "reset" in any fashion so be sure to explicitly clear 
+	any unwanted properties.
+
+	this list (at least atm) assumes all items are the same height.
+
+	we do apply some styling to the nodes (display:hidden); this should
+	be able to play nicely with other styling, just don't use display.
+	FIXME: we can stop doing that if we actively remove nodes, but is it
+	worth it?
+
+	list implements a 'scrollTo' method which ensures the given item (by
+	index) is visible.
+		
+  -->
+
+<dom-module id="virtual-list">
+
+	<template>
+		
+		<style>
+			
+			:host { 
+				overflow: auto; 
+			}
+		
+		</style>
+	
+		<div id='nodes'></div>
+		
+	</template>
+
+	<script>
+	
+(function(){
+
+	const hideNode = function( node, hide ){
+		
+		// we can set arbitrary properties on nodes, so do that?
+		// it means (1) we don't have to do any regexing on the
+		// style, and (2) we can skip altogether if we know state.
+		
+		if( !!hide !== !!node.__hidden ){
+			
+			let template = "display:none;";
+			let style = node.getAttribute( "style" ) || "";
+			let match = style.match( template );
+			if( hide ) node.setAttribute( "style", template + style );
+			else node.setAttribute( "style", style.replace( template, "" ));
+			node.__hidden = !!hide;
+			
+		}
+		
+	};
+
+	const repaint_internal = function(){
+	
+		let list = this;
+		let height = list.offsetHeight;
+		if( this.debug ) console.info( "height", height );
+		
+		if( height <= 0 ) return;
+
+		let data = list.data || [];
+		let first = 0;
+		
+		if( list.item_height ){
+			first = Math.floor( list.scrollTop / list.item_height );
+			let max_elements = Math.ceil( height / list.item_height );
+			let last_start = Math.max( 0, data.length - max_elements );
+			if( first > last_start ) first = last_start;
+		}
+
+		// preserve even/odd for css purposes
+
+		if( first % 2 == 1 ){
+			first--;
+		} 
+
+		let nodes = Polymer.dom(list.$.nodes).children;
+
+		let rendered_height = 0;
+		let rendered_nodes = 0;
+		let index = first;
+
+		while( rendered_height < height * 2 && index < data.length ){
+			
+			let node;
+			
+			if( nodes.length > rendered_nodes ) node = nodes[rendered_nodes];
+			else {
+				node = document.createElement( list.template );
+				node.classList.add('list-entry');
+				list['class-list'].split( /\s+/ ).map( function(c){
+					if( c.trim().length ) node.classList.add(c.trim());
+				});
+				Polymer.dom(list.$.nodes).appendChild( node );
+				Polymer.dom.flush();
+			}
+			hideNode(node, false);
+			
+			if( typeof data[index] === "string" ){
+				node.textContent = data[index];
+			}
+			else {
+				for( let key in data[index] ) node[key] = data[index][key];
+			}
+			
+			rendered_height += node.offsetHeight;
+			
+			// why does this jump around? weird.  at some point it becomes 
+			// stable, we have to figure out when that is.
+			
+			//if( !list.item_height ) list.item_height = node.offsetHeight;
+			//console.info( list.item_height, node.offsetHeight );
+			list.item_height = node.offsetHeight;
+
+			index++, rendered_nodes++;
+			
+		}
+		
+		if( index >= data.length || nodes.length > data.length ){ 
+			for( let i = rendered_nodes; i< nodes.length; i++ ){
+				hideNode(nodes[i], true);
+			}
+		}
+
+		if( this.debug ) console.info( first, index, data.length, rendered_nodes, rendered_height );
+
+		let margin_top = first * list.item_height;
+		let margin_bottom = (data.length - index) * list.item_height;
+		if( index >= data.length ) margin_bottom = 0;
+		
+		list.$.nodes.setAttribute( 'style', 
+			"margin-top: " + margin_top + "px; margin-bottom: " + margin_bottom + "px;" );
+		
+	};
+	
+	let repaint = function(){
+		let instance = this;
+		requestAnimationFrame( function(){
+			repaint_internal.call(instance);
+		});
+	};
+		
+	Polymer({
+		
+		is: "virtual-list",
+		
+		properties: {
+			data: {
+				type: Array,
+				observer: '_dataChanged'
+			},
+			template: {
+				type: String,
+				value: "div"
+			},
+			"class-list": {
+				type: String,
+				value: ""	
+			},
+			debug: Boolean
+		},
+		
+		_dataChanged: function(x){
+			repaint.call(this);
+		},
+		
+		attached: function(){
+			if( !this.repaint ) this.repaint = repaint.bind(this, undefined);
+			repaint.call(this);
+			this.addEventListener('scroll', this.repaint);
+		},
+		
+		detached: function(){
+			this.removeEventListener('scroll', this.repaint);
+		},
+		
+		scrollTo: function(index){
+			let instance = this;
+			requestAnimationFrame( function(){
+				instance.scrollTop = instance.item_height * index;
+			});
+		}
+		
+	});
+
+})();
+	
+	</script>
+
+</dom-module>

@@ -1,0 +1,81 @@
+{
+  "name": "constructr",
+  "productName": "ConstructR",
+  "version": "0.8.3",
+  "description": "Electron-based R shell",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sdllc/constructr.git"
+  },
+  "author": {
+    "name": "Structured Data LLC",
+    "email": "info@riskamp.com"
+  },
+  "homepage": "https://constructr-project.com/shell",
+  "license": "MIT",
+  "main": "app/main.js",
+  "scripts": {
+    "start": "electron app/main.js",
+    "dist": "build"
+  },
+  "build": {
+    "asar": true,
+    "asar-unpack": "**/*.R",
+    "asar-unpack-dir": "**/{R-3.*,node_modules/controlr,library,R}/**/*",
+    "win": {
+      "iconUrl": "https://raw.githubusercontent.com/sdllc/constructr/master/build/icon.ico"
+    },
+    "linux": {
+      "depends": [
+        "r-base-core",
+        "r-base",
+        "r-recommended",
+        "libappindicator1",
+        "libnotify-bin"
+      ],
+      "fpm": [
+        "--deb-priority",
+        "optional",
+        "--category",
+        "devel"
+      ]
+    }
+  },
+  "dependencies": {
+    "chokidar": "^1.4.3",
+    "cmjs-shell": "^0.3.0",
+    "controlr": "^2.0.1",
+    "electron-squirrel-startup": "^1.0.0",
+    "electron-window-state": "^3.0.3",
+    "pubsub-js": "^1.5.3",
+    "untildify": "^3.0.2",
+    "xml": "^1.0.1"
+  },
+  "devDependencies": {
+    "bower": "^1.7.9",
+    "del": "^2.2.0",
+    "electron-builder": "^3.25.0",
+    "electron-prebuilt": "^1.2.3",
+    "extract-zip": "^1.5.0",
+    "gulp": "^3.9.1",
+    "gulp-add-src": "^0.2.0",
+    "gulp-concat": "^2.6.0",
+    "gulp-cssnano": "^2.1.2",
+    "gulp-htmlmin": "^2.0.0",
+    "gulp-if": "^2.0.0",
+    "gulp-livereload": "^3.8.1",
+    "gulp-postcss": "^6.1.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-run": "^1.6.12",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-uglify": "^1.5.3",
+    "gulp-util": "^3.0.7",
+    "lodash.assign": "^4.0.7",
+    "postcss-import": "^8.1.0",
+    "request": "^2.72.0",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "webpack": "^1.12.14",
+    "webpack-stream": "^3.1.0"
+  }
+}

@@ -1,0 +1,120 @@
+<!--
+
+ Copyright (c) 2016 Structured Data, LLC
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to 
+ deal in the Software without restriction, including without limitation the 
+ rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ sell copies of the Software, and to permit persons to whom the Software is 
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in 
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ IN THE SOFTWARE.
+
+-->
+
+<dom-module id="history-panel">
+    <template>
+        <style>
+            
+            :host {
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                position: absolute;
+                display: flex;
+                flex-direction: column;
+            }
+        
+            #content_area {
+                overflow: hidden;
+                box-sizing: border-box;
+                flex-grow: 1;
+                position: relative;
+                text-overflow: clip !important;
+            }
+
+            #content_area:focus {
+                outline: none;
+            }
+            
+			.list-header-filter {
+				margin-left: 1em;
+				margin-top: .8em;
+			}
+
+			.list-header-filter-button {
+				margin-left: .2em;
+                margin-right: 0;
+				margin-top: .8em;
+                text-align: center;
+			}
+
+            #flex-patch {
+                position: absolute;
+                top: 0px;
+                left: 0px;
+                right: 0px;
+                bottom: 0px;
+            }
+
+        </style>
+
+            <panel-header close-box title="{{header}}">
+                <input type='text' id='query' class='list-header-filter' placeholder='Find' value="{{filter::input}}"></input>
+                <button class='list-header-filter-button' on-click='find_prev'><i class="material-icons">keyboard_arrow_left</i></button>
+                <button class='list-header-filter-button' on-click='find_next'><i class="material-icons">keyboard_arrow_right</i></button>
+            </panel-header>
+            <div id='content_area'>
+                <div id='flex-patch'>
+                    <content/>
+                </div>
+            </div>
+        
+    </template>
+    <script>
+        
+        Polymer({
+            
+            is: "history-panel",
+        
+            properties: {
+                header: String,
+                filter: {
+                    type: String,
+                    value: "",
+                    observer: "_filterChange"
+                },
+            },
+        
+            appendChild: function(elt){
+                Polymer.dom(this).appendChild(elt);
+            },
+
+            _filterChange: function(e){
+                this.fire( "filter-change", this.filter );
+            },
+
+            find_prev: function(e){
+                this.fire( "find-next", -1 );
+            },
+            
+            find_next: function(e){
+                this.fire( "find-next", 1 );
+            }
+
+        });
+        
+    </script>
+</dom-module>
+

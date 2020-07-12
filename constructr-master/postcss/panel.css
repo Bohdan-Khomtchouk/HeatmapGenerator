@@ -1,0 +1,149 @@
+/**
+ * Copyright (c) 2016 Structured Data, LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to 
+ * deal in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ * sell copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+.panel {
+	
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+	position: absolute;
+	background: rgb(248,248,248);
+	color: #222;
+	
+}
+
+.panel-header {
+	color: rgb(255, 207, 108);
+}
+
+.panel .sub-header {
+	color: #999;
+}
+
+panel-header {
+	border-bottom: 1px dotted #ccc;
+	order: 0;
+}
+
+panel-header button {
+	height: 2em;
+	width: 2em;
+	margin: 10px 10px 10px 0px;
+	padding: 0 0;
+	background: inherit;
+	text-align: right;
+	overflow: hidden;
+	border: 1px solid rgb(248,248,248);
+	color: #aaa;
+}
+
+panel-header a {
+	color: #aaa;
+}
+
+panel-header button:hover {
+	color: #fff;
+	background: #ddd ;
+}
+panel-header button:active {
+	border: 1px solid #666;
+}
+			
+.panel-body {
+	flex-grow: 1;
+	order: 1;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+}
+
+.panel-footer {
+	border-top: 1px solid #ccc;
+	order: 2;
+}
+
+.panel-footer button {
+	margin: .75em .3em .75em .3em;
+	background: #fff;
+	color: #333;
+	border-color: #aaa;
+}
+
+.panel-footer button:hover {
+	background: #eee;
+}
+
+.panel-footer button:active {
+	background: #ddd;
+}
+
+.panel-footer.centered {
+	text-align: center;
+}
+
+/** flex patch */
+.panel-container {
+	position: absolute;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+}
+
+.panel-content-header {
+	padding: .5em;
+}
+
+.panel-content-header-temp {
+	padding: .5em;
+	text-align: center;
+	color: #444;
+}
+
+.panel-container2 {
+	flex-grow: 1;
+	position: relative;
+}
+
+.panel input[type=text] {
+	background: #fff;
+}
+
+input[type=text].value-invalid {
+	background: #f58c56;
+}
+
+.panel .list-entry {
+	background: rgb( 235, 240, 250 );
+}
+
+.panel .list-entry:nth-child(even) {
+	background: #fff;
+}
+
+.panel .list-header {
+	color: #666;
+	display: flex;
+	padding: 1em;
+	flex-grow: 0;
+	position: relative;
+}

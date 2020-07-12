@@ -1,0 +1,60 @@
+/**
+ * Copyright (c) 2016 Structured Data, LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to 
+ * deal in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ * sell copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+.progress-bar {
+	position: relative;
+	box-sizing: border-box;
+	width: 80%;
+	height: 1.4em;
+	background: #fff;
+	margin: 1em;
+	border-radius: 2px;
+	overflow: hidden;
+	border: 1px solid #ccc;
+}
+
+.progress-bar-progress {
+	position: absolute;
+	box-sizing: border-box;
+	top: 0px;
+	left: 0px;
+	height: 100%;
+	z-index: 1;
+	background: #eef;
+	padding: 0;
+	margin: 0;
+}
+
+.progress-bar-label {
+	position: absolute;
+	box-sizing: border-box;
+	top: 50%;
+	left: 0px;
+	width: 100%;
+	text-align: center;
+	z-index: 2;
+	color: #333;
+	padding: 0;
+	margin: 0;
+	-webkit-transform: translateY(-50%);
+}
+

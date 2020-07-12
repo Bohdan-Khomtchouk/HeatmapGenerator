@@ -54,7 +54,14 @@ export default class OSManager {
         }
       })
     } else if (this.OS === 'Linux') {
-      callback(Error('Not configured.'))
+          this.$rCheckExecution('R --version', (error, output) => {
+        if (error == null) {
+          this.isRInstalled = output
+          callback(null, output)
+        } else {
+          callback(error)
+        }
+          }
     } else callback(Error('Operating System unsupported'))
   }
   getRScriptPath () {
@@ -86,7 +93,8 @@ export default class OSManager {
         return commandBase
       }
     } else if (this.OS === 'Linux') {
-      throw Error('OS not configured yet.')
+        var commandBases = 'Rscript'
+        return commandBases
     } else {
       throw Error('Unsupported OS.')
     }
@@ -131,6 +139,8 @@ export default class OSManager {
       outputLocation = homePath + '/HMG/' + outputFilename
       return outputLocation
     } else if (this.OS === 'Linux') {
+      outputLocation = process.cwd() + '/HMG/' + outputFilename
+
       // Linux -- figure out where you will save/create on the R end, then find an appropriate dynamic variable to get you there
     } else throw Error('Unsupported system.')
     return outputLocation

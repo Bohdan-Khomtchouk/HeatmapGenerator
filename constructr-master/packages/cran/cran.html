@@ -1,0 +1,590 @@
+<!-- 
+
+ Copyright (c) 2016 Structured Data, LLC
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to 
+ deal in the Software without restriction, including without limitation the 
+ rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ sell copies of the Software, and to permit persons to whom the Software is 
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in 
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ IN THE SOFTWARE.
+
+-->
+
+<dom-module id="mirror-list-entry">
+	
+	<template>
+		
+		<style>
+			:host {
+				display: flex;
+			}
+			
+			:host div {
+				cursor: default;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+			
+		</style>
+		
+		<div>
+			<div>
+				<input type='radio' id='list_entry_radio' checked={{checked}}></input>
+			</div>
+		</div>
+		<div>
+			<div class='mirror-list-name'>{{Name}}</div>
+			<div class='mirror-list-host sub-header'>{{Host}}</div>
+		</div>
+		
+	</template>
+	
+	<script>
+		Polymer({
+			is: "mirror-list-entry",
+			properties: {
+				index: {
+					type: Number,
+					reflectToAttribute: true
+				}
+			}
+		});
+	</script>
+	
+</dom-module>
+
+<dom-module id="mirror-chooser">
+	
+	<template>
+		
+		<style>
+			
+			.hidden { display: none; }
+			
+			#mirrorList {
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+			}
+			
+			.mirror-option, .mirror-option .option-text {
+				cursor: default;
+			}
+			
+			.mirror-option {
+				display: flex;
+				align-items: stretch;
+				margin: 1em 0em;
+			}
+
+			.mirror-option .option-text {
+				margin-left: .5em;
+				margin-top: 2px;
+			}
+			
+			
+			.chooser-list {
+				height: 100%;
+				overflow-y: auto;
+				flex-grow: 1;
+				position: relative;
+			}
+			
+		</style>
+		
+		<div class='panel-body'>
+			
+			<panel-header close-box title="Select a CRAN mirror:"></panel-header>
+				
+			<div id='panelMessage' class='panel-content-header-temp'>
+				{{message}}
+			</div>
+			
+			<div class='chooser-list'>
+				<virtual-list id='mirrorList' template='mirror-list-entry'></virtual-list>
+			</div>
+					
+			<div class='chooser-list-footer footer'>
+				
+				<div on-click='toggleHTTP' class='mirror-option'>
+					<div>
+						<input type='checkbox' id='http_option_cb' checked='{{http}}'></input>
+					</div>
+					<div class='option-text'>Show HTTP mirrors</div>
+				</div>
+					
+				<div on-click='toggleDefault' class='mirror-option'>
+					<div>
+						<input type='checkbox' id='default_option_cb' checked='{{setDefault}}'></input>
+					</div>
+					<div class='option-text'>Set as default</div>
+				</div>	
+					
+			</div>
+			
+		</div>
+		<div class='panel-footer centered' ref='footer'>
+			<button class='panel-button' id='accept'>Accept</button>
+			<button class='panel-button' id='cancel'>Cancel</button>			
+		</div>
+		
+	</template>
+
+	<script>
+		
+	Polymer({
+		is: "mirror-chooser",
+		
+		properties: {
+			message: {
+				type: String,
+				value: "Loading mirror list, please wait..."
+			},
+			data: {
+				type: Array,
+				value: [],
+				observer: "_dataChange"
+			},
+			http: {
+				type: Boolean,
+				value: false,
+				observer: "_httpChange"
+			},
+			setDefault: {
+				type: Boolean,
+				value: false,
+				observer: "_defaultChange"
+			}
+		},
+		
+		listeners: {
+			'mirrorList.click': 'click'
+		},
+		
+		scrollTo: function(index){
+			this.$.mirrorList.scrollTo(index);
+		},
+		
+		click: function(e){
+			var target = e.target;
+			while( target && target.is !== "mirror-list-entry" ){
+				target = target.parentElement;
+			}
+			if( target ){
+				this.fire( "selection-change", {
+					index: target.index
+				});
+			}
+			
+		},
+		
+		toggleHTTP: function(){
+			this.http = !this.http;	
+		},
+		
+		toggleDefault: function(){
+			this.setDefault = !this.setDefault;	
+		},
+
+		_httpChange: function(){
+			this.fire( 'filter-change', this.http );
+		},
+		
+		_defaultChange: function(){
+			
+		},
+		
+		/**
+		 * we're wrapping the data and watching it so we can update on change
+		 * (as well as clear on removal).
+		 */
+		_dataChange: function(){
+			
+			var show = ( this.data && this.data.length );
+			if( show ){
+				this.$.panelMessage.classList.add("hidden");
+			}
+			else {
+				this.$.panelMessage.classList.remove("hidden");
+			}
+			
+			this.$.mirrorList.data = this.data;
+			if( this.$.mirrorList.repaint ){
+				Polymer.dom.flush();
+				this.$.mirrorList.repaint();
+			}
+					
+
+		}
+		
+	});
+		
+	</script>
+	
+</dom-module>
+
+<!-- 
+	
+  -->
+
+
+<dom-module id="package-list-entry">
+	
+	<template>
+		
+		<style>
+			:host {
+				display: flex;
+			}
+			
+			:host div {
+				cursor: default;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+                width: 100%;
+			}
+			
+            :host a {
+                padding-right: 1em;
+            }
+
+		</style>
+		
+		<input id='check' on-click='checkbox_click' type='checkbox' checked='{{or(checked, installed)}}' disabled='{{installed}}'></input>
+		<div>{{Package}}</div>
+        <a class='cran_link' href='{{link}}'>...</a>
+
+	</template>
+	
+	<script>
+		
+		Polymer({
+			
+			is: "package-list-entry",
+			
+			properties: {
+				Package: String,
+                link: String,
+				checked: {
+					type: Boolean,
+					value: false
+				},
+				installed: {
+					type: Boolean,
+					value: false
+				}
+			},
+			
+			checkbox_click: function(e){
+				e.stopPropagation();
+			},
+			
+			or: function(){
+				for( var i = 0; i< arguments.length; i++ ){ if( arguments[i] ) return true; }
+				return false;
+			},
+			
+			_checkedChanged: function(){
+				if( this.installed || this.checked ) this.checked = true;
+				else this.checked = false;
+			}
+			
+		});
+		
+	</script>
+	
+</dom-module>
+
+<dom-module id="package-chooser">
+	
+	<template>
+		
+		<style>
+			
+			.hidden { display: none; }
+			
+			#packageList, #selectedList {
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+			}
+			
+			.sub-panel{
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				display: flex;
+				flex-direction: column;
+			}
+			
+			.list-container {
+				position: relative;
+				bottom: 0;
+				flex-grow: 1;
+			}
+		
+			.list-header-filter {
+				margin-left: 1em;
+				margin-top: .8em;
+			}
+			
+		</style>
+		
+		<div class='panel-body'>
+			
+			<split-panel direction='vertical'>
+				<split-pane split='70'>
+
+					<div class='sub-panel'>
+
+						<panel-header close-box title="Available packages:">
+							<input type='text' class='list-header-filter' placeholder='Filter' value="{{filter::input}}"></input>
+						</panel-header>
+						
+						<div id='panelMessage' class='panel-content-header-temp'>
+							{{message}}
+						</div>
+					
+						<div class='list-container'>
+							<virtual-list id='packageList' template='package-list-entry'></virtual-list>
+						</div>
+					</div>
+					
+				</split-pane>
+				<split-pane split='30'>
+			
+					<div class='sub-panel'>
+						<div class='list-header'>
+							Selected packages:
+						</div>
+						<div class='list-container'>
+							<virtual-list id='selectedList' template='package-list-entry'></virtual-list>
+						</div>
+					</div>
+					
+				</split-pane>					
+				
+			</split-panel>
+			
+		</div>
+		
+		<div class='panel-footer centered' ref='footer'>
+			<button class='panel-button' id='accept'>Accept</button>
+			<button class='panel-button' id='cancel'>Cancel</button>			
+		</div>
+		
+	</template>
+
+	<script>
+		
+(function(){
+
+		
+	Polymer({
+		is: "package-chooser",
+		
+		properties: {
+			message: {
+				type: String,
+				value: "Loading package list, please wait..."
+			},
+			filter: {
+				type: String,
+				value: "",
+				observer: "_filterChange"
+			},
+			data: {
+				type: Array,
+				value: [],
+				observer: "_dataChange"
+			}
+		},
+		
+		listeners: {
+			'packageList.click': 'clickAvailable',
+			'selectedList.click': 'clickSelected',
+			'packageList.change': 'changeAvailable',
+			'selectedList.change': 'changeSelected'
+		},
+		
+		scrollTo: function(index){
+			this.$.packageList.scrollTo(index);
+		},
+
+		/**
+		 * since there's only one way to go here -- remove -- we
+		 * have the same handler for click and change.  
+		 */
+		clickSelected: function(e){
+			e.stopPropagation();
+			e.preventDefault();
+
+            if( e.target.tagName === "A" ){
+                this.fire( "click-link", e.target );
+                return;
+            }
+
+			var target = e.target;
+			while( target && target.is !== "package-list-entry" ){
+				target = target.parentElement;
+			}
+			if( target ){
+				this.data[target.index].checked = false;
+				this._dataChange();
+			}
+			this.updateSelected();
+		},
+		
+		clickAvailable: function(e){
+
+			e.stopPropagation();
+			e.preventDefault();
+
+            if( e.target.tagName === "A" ){
+                this.fire( "click-link", e.target );
+                return;
+            }
+
+			var target = e.target;
+			while( target && target.is !== "package-list-entry" ){
+				target = target.parentElement;
+			}
+			if( target ){
+				if( target.installed ) return;
+				target.checked = !target.checked;
+				this.data[target.index].checked = target.checked;
+			}
+			this.updateSelected();
+		},
+		
+		/**
+		 * we need to handle this event separately from click.  if you handle
+		 * click, it doesn't capture the click state of the checkbox properly
+		 * because that changes _after_ click.
+		 * 
+		 * so we squelch the actual click event on the checkbox (not anywhere 
+		 * else), and handle change instead.
+		 * 
+		 * note that change isn't fired when we change programatically, so 
+		 * there's no loop.
+		 */
+		changeAvailable: function(e){
+			var checked = e.target.checked;
+			var target = e.target;
+			while( target && target.is !== "package-list-entry" ){
+				target = target.parentElement;
+			}
+			if( target ){
+				if( target.installed ) return;
+				target.checked = checked;
+				this.data[target.index].checked = target.checked;
+			}
+			this.updateSelected();
+		},
+		
+		/** as above */
+		changeSelected: function(e){
+			var checked = e.target.checked;
+			var target = e.target;
+			while( target && target.is !== "package-list-entry" ){
+				target = target.parentElement;
+			}
+			if( target ){
+				target.checked = checked;
+				this.data[target.index].checked = target.checked;
+			}
+			this.updateSelected();
+			this.$.packageList.repaint();
+		},
+		
+		updateSelected: function(){
+			
+			if( !this.selected ) this.selected = [];
+			else this.selected.splice( 0, this.selected.length );
+
+			if( !this.data ) return; // early
+			
+			for( var i = 0; i< this.data.length; i++ ){
+				if( this.data[i].checked ){
+					this.selected.push( this.data[i] );
+				}
+			}
+			this.$.selectedList.data = this.selected;
+			if( this.$.selectedList.repaint ){
+				Polymer.dom.flush();
+				this.$.selectedList.repaint();
+			}
+		},
+		
+		_filterChange: function(){
+			this.updateFilter();
+		},
+		
+		/**
+		 * we're wrapping the data and watching it so we can update on change
+		 * (as well as clear on removal).
+		 */
+		_dataChange: function(){
+			
+			// console.info("_dc" );
+			var show = ( this.data && this.data.length );
+			if( show ){
+				this.$.panelMessage.classList.add("hidden");
+			}
+			else {
+				this.$.panelMessage.classList.remove("hidden");
+			}
+			
+			this.updateFilter();
+		},
+		
+		updateFilter: function(){
+
+			if( this.filter.length === 0 ) this.$.packageList.data = this.data;
+			else {
+				var instance = this;
+				requestAnimationFrame( function(){
+					var rex = new RegExp(instance.filter.toLowerCase());
+					var filtered = [];
+					for( var i = 0; i< instance.data.length; i++ ){
+						if( instance.data[i].Package.toLowerCase().match( rex )) filtered.push( instance.data[i] );
+					}
+					instance.$.packageList.data = filtered;
+				});
+			}
+			if( this.$.packageList.repaint ){
+				Polymer.dom.flush();
+				this.$.packageList.repaint();
+			}
+			
+			this.updateSelected();
+		}
+		
+	});
+		
+})();
+		
+		
+	</script>
+	
+</dom-module>
