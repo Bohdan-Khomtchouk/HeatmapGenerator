@@ -82,10 +82,7 @@
                         </div>
                     </div>
                 </div>
-            <div class="container">
-                <div class="row">
-                    <div id="graphDiv" class="col-12" style="height: 100%"></div>
-                </div>
+            <div class="container-fluid" id="graphDiv" style="width: 100%; height: 100%; overflow: scroll">
             </div>
         </div>
     </div>
@@ -93,7 +90,6 @@
 
 <script>
   import Heatmapper from '../Heatmapper.js'
-  var Plotly = require('../custom-plotly')
   export default {
     name: 'Generator',
     data: () => {
@@ -129,26 +125,12 @@
     },
     methods: {
       generateHeatmap: function () {
-        this.isLoading = true
+        // this.isLoading = true
         this.generationProgress = 0
-        let self = this
-        var htmp = new Heatmapper(this.filename, this.mainTitle, this.xLab, this.yLab, this.colorScheme)
-        htmp.processData((prog) => {
-          this.generationProgress = prog
-        }, (error, data, layout) => {
-          self.generationProgress = 40
-          if (error == null) {
-            self.isLoading = false
-            self.heatmapGenerated = true
-            Plotly.newPlot('graphDiv', data, layout).then(() => {
-              self.generationProgress = 100
-            })
-          } else {
-            self.isLoading = false
-            self.heatmapGenerated = false
-            alert(error.toString())
-          }
-        })
+        // var self = this
+        var htmp = new Heatmapper('#graphDiv')
+        var options = {}
+        htmp.drawHeatmapWithDendrogram(this.filename, options)
       },
       chooseFile () {
         const { dialog } = require('electron').remote
@@ -166,7 +148,6 @@
       },
       cancelFile () {
         Object.assign(this.$data, this.$options.data()) // Clears all generator state data
-        Plotly.purge('graphDiv')
       },
       dataVerification () {
         // eslint-disable-next-line eqeqeq
