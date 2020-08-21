@@ -7,7 +7,14 @@ export default class Heatmapper {
     this.parent = parent
     this.d3 = require('d3')
   }
+
+  /**
+   * Draw a heatmap along with the accompanying dendrogram
+   * @param {String} filePath The path to the data file (.csv, .txt)
+   * @param {Dictionary} options Graphical and data-based customizations
+   */
   drawHeatmapWithDendrogram (filePath, options) {
+    // We don't have a UI to input user parameters, so we manually set options for now.
     options.margin = {top: 10, right: 0, bottom: 10, left: 0}
     options.height = 150 - options.margin.top - options.margin.bottom
     options.clusterSpace = 100 // size of the cluster tree
@@ -15,23 +22,46 @@ export default class Heatmapper {
 
     var self = this
     self.parse(filePath).then(function (parsedData) {
-      console.log('parsed')
-      return self.cluster(parsedData)
-    }).then(function (payload) {
-      console.log('clustered')
-      self.payload = payload
+      self.process(parsedData)
+    }).then(function () {
+      self.cluster()
+    }).then(function () {
       self.canvas(options)
     }).then(function () {
-      console.log('canvassed')
       self.labels(options)
     }).then(function () {
-      console.log('labelled')
       self.heatmap(options)
     }).then(function () {
-      console.log('heatmapped')
       self.dendrogram(options)
     }).then(function () {
-      console.log('dendrogrammed')
+    }).catch((error) => {
+      console.log('ERROR: ' + error)
+    })
+  }
+
+  /**
+   * Draw a heatmap
+   * @param {String} filePath The path to the data file (.csv, .txt)
+   * @param {Dictionary} options Graphical and data-based customizations
+   */
+  drawHeatmap (filePath, options) {
+    // We don't have a UI to input user parameters, so we manually set options for now.
+    options.margin = {top: 10, right: 0, bottom: 10, left: 0}
+    options.height = 150 - options.margin.top - options.margin.bottom
+    options.clusterSpace = 200 // no cluster tree = no cluster space
+    options.cellSize = 50
+    options.clustering = false
+
+    var self = this
+    self.parse(filePath).then(function (parsedData) {
+      self.process(parsedData)
+    }).then(function () {
+      self.canvas(options)
+    }).then(function () {
+      self.labels(options)
+    }).then(function () {
+      self.heatmap(options)
+    }).then(function () {
     }).catch((error) => {
       console.log('ERROR: ' + error)
     })
@@ -53,44 +83,55 @@ export default class Heatmapper {
       })
     })
   }
-  cluster (inputData) {
+  process (inputData) {
+    var self = this
+    return new Promise(function (resolve, reject) {
+      var yLabels = inputData.shift() // First subarray is just column labels
+      // Iterate through all rows to get the labels -- would it be faster to just iterate through integers, rather than performing a .shift()
+      var xLabels = []
+      for (let a = 0, b = inputData.length; a < b; a++) {
+        xLabels.push(inputData[a].shift()) // First object of each row is its label
+      }
+      var diff = yLabels.length - inputData[0].length
+      if (diff > 0) yLabels.shift(diff) // if there are more column labels than data points, erase the extras (i.e. the corner label)
+
+      var payload = {}
+      payload.matrix = inputData
+      payload.rowLabels = xLabels
+      payload.colLabels = yLabels
+      self.payload = payload
+      resolve(null)
+    })
+  }
+  cluster () {
+    var self = this
     return new Promise(function (resolve, reject) {
       var hcluster = require('./hcluster')
-      var yLabels = inputData.shift()
-      var xLabels = []
-      for (var a = 0, b = inputData.length; a < b; a++) {
-        xLabels.push(inputData[a].shift())
-      }
-
-      var diff = yLabels.length - inputData[0].length
-      if (diff > 0) yLabels.shift(diff)
-
-      var matrixByRows = []
-      for (var x = 0, l = inputData.length; x < l; x++) {
+      var matrixByRows = [] // Creates array of row vectors to cluster (column version below)
+      for (let x = 0, l = self.payload.matrix.length; x < l; x++) {
         var row = []
-        for (var y = 0, d = inputData[x].length; y < d; y++) {
-          row.push(inputData[x][y])
+        for (let y = 0, d = self.payload.matrix[x].length; y < d; y++) {
+          row.push(self.payload.matrix[x][y])
         }
         matrixByRows.push({
-          'name': xLabels[x],
+          'name': self.payload.rowLabels[x],
           'value': row
         })
       }
       var clusteredRows = hcluster()
         .distance('euclidean')
         .linkage('avg')
-        .verbose(false)
+        .verbose(true)
         .posKey('value')
         .data(matrixByRows)
-
       var matrixByColumns = []
-      for (y = 0, d = inputData[0].length; y < d; y++) {
+      for (let y = 0, d = self.payload.matrix[0].length; y < d; y++) {
         var col = []
-        for (x = 0, l = inputData.length; x < l; x++) {
-          col.push(inputData[x][y])
+        for (let x = 0, l = self.payload.length; x < l; x++) {
+          col.push(self.payload.matrix[x][y])
         }
         matrixByColumns.push({
-          'name': yLabels[y],
+          'name': self.payload.colLabels[y],
           'value': col
         })
       }
@@ -102,23 +143,34 @@ export default class Heatmapper {
         .data(matrixByColumns)
       var rowLabels = []
       var rowNodes = clusteredRows.orderedNodes()
-      for (var n in rowNodes) {
+      for (let n in rowNodes) {
         rowLabels.push(rowNodes[n].name)
       }
       var colLabels = []
       var colNodes = clusteredColumns.orderedNodes()
-      for (var m in colNodes) {
+      for (let m in colNodes) {
         colLabels.push(colNodes[m].name)
       }
 
-      var finalPayload = {}
-      finalPayload.matrix = inputData
-      finalPayload.clusteredRows = clusteredRows
-      finalPayload.clusteredColumns = clusteredColumns
-      finalPayload.rowLabels = rowLabels
-      finalPayload.colLabels = colLabels
-      if (inputData.length === 0 || colNodes.length === 0 || rowNodes.length === 0) return reject(new Error('Failed to cluster data.'))
-      else resolve(finalPayload)
+      var rowOrder = clusteredRows.tree().indexes
+      var colOrder = clusteredColumns.tree().indexes
+      var reorganizedMatrix = []
+      for (let x = 0, l = self.payload.matrix.length; x < l; x++) {
+        let row = []
+        let a = rowOrder[x]
+        for (let y = 0, d = self.payload.matrix[x].length; y < d; y++) {
+          let b = colOrder[y]
+          row.push(self.payload.matrix[a][b])
+        }
+        reorganizedMatrix.push(row)
+      }
+      self.payload.matrix = reorganizedMatrix
+      self.payload.clusteredRows = clusteredRows
+      self.payload.clusteredColumns = clusteredColumns
+      self.payload.rowLabels = rowLabels
+      self.payload.colLabels = colLabels
+      if (self.payload.matrix.length === 0 || colNodes.length === 0 || rowNodes.length === 0) return reject(new Error('Failed to cluster data.'))
+      else resolve(null)
     })
   }
   canvas (options) {
@@ -127,7 +179,6 @@ export default class Heatmapper {
     var rowNumber = self.payload.matrix.length
     options.width = options.cellSize * colNumber + options.clusterSpace // - margin.left - margin.right,
     options.height = options.cellSize * rowNumber + options.clusterSpace // - margin.top - margin.bottom
-
     return new Promise(function (resolve, reject) {
       self.svg = self.d3.select(self.parent)
         .append('svg')
@@ -182,12 +233,6 @@ export default class Heatmapper {
   heatmap (options) {
     var self = this
     return new Promise(function (resolve, reject) {
-      self.rowRoot = self.d3.hierarchy(self.payload.clusteredRows.tree())
-      self.colRoot = self.d3.hierarchy(self.payload.clusteredColumns.tree())
-      self.rowCluster = self.d3.cluster()
-        .size([options.height - options.clusterSpace, options.clusterSpace])
-      self.colCluster = self.d3.cluster()
-        .size([options.width - options.clusterSpace, options.clusterSpace])
       var colors = ['#0084FF', '#188EF7', '#3199EF', '#49A4E8', '#62AFE0', '#7ABAD9', '#93C5D1', '#ABD0C9', '#C4DBC2', '#DCE6BA', '#F5F1B3', '#F5DBA3', '#F6C694', '#F6B085', '#F79B76', '#F78667', '#F87057', '#F85B48', '#F94539', '#F9302A', '#FA1B1B']
       var matrix = []
       var min = 0
@@ -259,6 +304,13 @@ export default class Heatmapper {
       function elbow (d, i) {
         return 'M' + d.source.y + ',' + d.source.x + 'V' + d.target.x + 'H' + d.target.y
       }
+      self.rowRoot = self.d3.hierarchy(self.payload.clusteredRows.tree())
+      self.colRoot = self.d3.hierarchy(self.payload.clusteredColumns.tree())
+      self.rowCluster = self.d3.cluster()
+        .size([options.height - options.clusterSpace, options.clusterSpace])
+      self.colCluster = self.d3.cluster()
+        .size([options.width - options.clusterSpace, options.clusterSpace])
+
       var rTree = self.svg.append('g').attr('class', 'rtree').attr('transform', 'translate (10, ' + (options.clusterSpace + options.cellSize) + ')')
       rTree.selectAll('.rlink')
         .data(self.rowCluster(self.rowRoot).links())

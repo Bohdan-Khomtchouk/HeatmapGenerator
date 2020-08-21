@@ -82,7 +82,7 @@
                         </div>
                     </div>
                 </div>
-            <div class="container-fluid" id="graphDiv" style="width: 100%; height: 100%; overflow: scroll">
+            <div class="container-fluid" id="graphDiv" style="width: 100%; height: 100%; ">
             </div>
         </div>
     </div>
@@ -131,6 +131,7 @@
         var htmp = new Heatmapper('#graphDiv')
         var options = {}
         htmp.drawHeatmapWithDendrogram(this.filename, options)
+        // htmp.drawHeatmap(this.filename, options)
       },
       chooseFile () {
         const { dialog } = require('electron').remote
