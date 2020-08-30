@@ -27,9 +27,9 @@
                             </b-btn-group>
                         </div>
                     </div>
-                    <div class="jumbotron mt-4 pb-2">
-                        <h5 class="pb-2">Labelling</h5>
-                        <div class="container">
+                    <div class="jumbotron pb-2">
+                        <h5 class="">Labelling</h5>
+                        <div class="container pb-2">
                             <div class="row align-items-center justify-content-start pb-2">
                                 <div class="col-sm input-group">
                                     <div class="input-group-prepend">
@@ -55,8 +55,19 @@
                                 </div>
                             </div>
                         </div>
-                        <h5 class="pt-2">Appearance</h5>
-                        <div class="container">
+                        <h5 class="">Data Analysis</h5>
+                        <div class="container pb-2">
+                            <div class="row align-items-center justify-content-start pb-2">
+                                <div class="col-4 input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Clustering</span>
+                                    </div>
+                                    <b-form-select v-model="clusteringType" :options="clusteringOptions"></b-form-select>
+                                </div>
+                            </div>
+                        </div>
+                        <h5 class="">Appearance</h5>
+                        <div class="container pb-2">
                             <div class="row align-items-center justify-content-start pb-2">
                                 <div class="col-sm input-group">
                                     <div class="input-group-prepend">
@@ -82,8 +93,11 @@
                         </div>
                     </div>
                 </div>
-            <div class="container-fluid" id="graphDiv" style="width: 100%; height: 100%; ">
-            </div>
+                <div class="container-fluid">
+                    <div class="col-8 offset-2" id="graphDiv" style="width: 100%; height: 100%; ">
+                    </div>
+                    <div id="d3tooltip"><p><span id="value"></span></p></div>
+                </div>
         </div>
     </div>
 </template>
@@ -120,6 +134,13 @@
           { value: 'Blackbody', text: 'Blackbody (Black to Sky Blue, Yellow Center)' },
           { value: 'Custom', text: 'Custom Colorscale', disabled: true }
         ],
+        clusteringType: 'none',
+        clusteringOptions: [
+          { value: 'none', text: 'None' },
+          { value: 'both', text: 'Both' },
+          { value: 'row', text: 'Row' },
+          { value: 'col', text: 'Column' }
+        ],
         generationProgress: 0
       }
     },
@@ -127,11 +148,23 @@
       generateHeatmap: function () {
         // this.isLoading = true
         this.generationProgress = 0
-        // var self = this
+        document.getElementById('graphDiv').innerHTML = ''
         var htmp = new Heatmapper('#graphDiv')
-        var options = {}
-        htmp.drawHeatmapWithDendrogram(this.filename, options)
-        // htmp.drawHeatmap(this.filename, options)
+        var options = {
+          title: {
+            text: this.mainTitle
+          },
+          xAxis: {
+            text: this.xLab
+          },
+          yAxis: {
+            text: this.yLab
+          },
+          clustering: {
+            type: this.clusteringType
+          }
+        }
+        htmp.drawHeatmap(this.filename, options)
       },
       chooseFile () {
         const { dialog } = require('electron').remote
@@ -149,6 +182,7 @@
       },
       cancelFile () {
         Object.assign(this.$data, this.$options.data()) // Clears all generator state data
+        document.getElementById('graphDiv').innerHTML = ''
       },
       dataVerification () {
         // eslint-disable-next-line eqeqeq
