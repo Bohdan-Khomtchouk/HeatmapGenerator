@@ -27,74 +27,83 @@
                             </b-btn-group>
                         </div>
                     </div>
-                    <div class="jumbotron pb-2">
-                        <h5 class="">Labelling</h5>
-                        <div class="container pb-2">
-                            <div class="row align-items-center justify-content-start pb-2">
-                                <div class="col-sm input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Graph Title</span>
-                                    </div>
-                                    <b-input @input="" v-model="mainTitle"></b-input>
-                                </div>
+                    <div class="jumbotron pb-3 pt-4">
+                        <div class="row">
+                            <div class="col-10">
+                                <h3><b>Heatmap Setup</b></h3>
                             </div>
-                            <div class="row align-items-center justify-content-start pb-2">
-                                <div class="col-sm input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">X-Axis Title</span>
-                                    </div>
-                                    <b-input @input="" v-model="xLab"></b-input>
-                                </div>
-                            </div>
-                            <div class="row align-items-center justify-content-start pb-2">
-                                <div class="col-sm input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Y-Axis Title</span>
-                                    </div>
-                                    <b-input @input="" v-model="yLab"></b-input>
-                                </div>
-                            </div>
-                        </div>
-                        <h5 class="">Data Analysis</h5>
-                        <div class="container pb-2">
-                            <div class="row align-items-center justify-content-start pb-2">
-                                <div class="col-4 input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Clustering</span>
-                                    </div>
-                                    <b-form-select v-model="clusteringType" :options="clusteringOptions"></b-form-select>
-                                </div>
-                            </div>
-                        </div>
-                        <h5 class="">Appearance</h5>
-                        <div class="container pb-2">
-                            <div class="row align-items-center justify-content-start pb-2">
-                                <div class="col-sm input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Color Scheme</span>
-                                    </div>
-                                    <b-form-select v-model="colorScheme" :options="colorSchemeOptions"></b-form-select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row mt-4">
-                            <div class="col-12 d-flex justify-content-center">
-                                <b-button v-if="!isLoading" variant="success" @click="generateHeatmap" v-bind:disabled="!dataVerified">Generate Heatmap</b-button>
-                                <b-button variant="primary" disabled v-if="isLoading">
-                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                    <span class="sr-only">Loading...</span>
+                            <div class="col-2 pr-0">
+                                <b-button v-if="this.heatmapGenerated" v-b-toggle.collapse-1 class="float-right" size="sm" @click="heatmapSettings = !heatmapSettings" variant="dark">
+                                    <b-icon v-if="heatmapSettings" icon="chevron-up"></b-icon>
+                                    <b-icon v-else icon="chevron-down"></b-icon>
+
                                 </b-button>
                             </div>
                         </div>
-                        <div class="row mt-4 mb-0">
-                            <div class="col-12">
-                                <b-progress :value="this.generationProgress" animated></b-progress>
+                        <b-collapse class="pt-2" visible id="collapse-1">
+                            <h5 class="">Labelling</h5>
+                            <div class="container pb-2">
+                                <div class="row align-items-center justify-content-start pb-2">
+                                    <div class="col-sm input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Graph Title</span>
+                                        </div>
+                                        <b-input @input="" v-model="mainTitle"></b-input>
+                                    </div>
+                                </div>
+                                <div class="row align-items-center justify-content-start pb-2">
+                                    <div class="col-sm input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Row Title</span>
+                                        </div>
+                                        <b-input @input="" v-model="rowAxis"></b-input>
+                                    </div>
+                                </div>
+                                <div class="row align-items-center justify-content-start pb-2">
+                                    <div class="col-sm input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Column Title</span>
+                                        </div>
+                                        <b-input @input="" v-model="colAxis"></b-input>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                            <h5 class="">Data Analysis</h5>
+                            <div class="container pb-2">
+                                <div class="row align-items-center justify-content-start pb-2">
+                                    <div class="col-4 input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Clustering</span>
+                                        </div>
+                                        <b-form-select v-model="clusteringType" :options="clusteringOptions"></b-form-select>
+                                    </div>
+                                </div>
+                            </div>
+                            <h5 class="">Appearance</h5>
+                            <div class="container pb-2">
+                                <div class="row align-items-center justify-content-start pb-2">
+                                    <div class="col-sm input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Color Scheme</span>
+                                        </div>
+                                        <b-form-select v-model="colorScheme" :options="colorSchemeOptions"></b-form-select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-4 pb-2">
+                                <div class="col-12 d-flex justify-content-center">
+                                    <b-button v-if="!isLoading" variant="success" @click="generateHeatmap">Generate Heatmap</b-button>
+                                    <b-button variant="primary" disabled v-if="isLoading">
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class="sr-only">Loading...</span>
+                                    </b-button>
+                                </div>
+                            </div>
+                        </b-collapse>
                     </div>
                 </div>
-                <div class="container-fluid">
-                    <div class="col-8 offset-2" id="graphDiv" style="width: 100%; height: 100%; ">
+                <div class="container">
+                    <div class="col-8 offset-2" id="graphDiv">
                     </div>
                     <div id="d3tooltip"><p><span id="value"></span></p></div>
                 </div>
@@ -103,19 +112,20 @@
 </template>
 
 <script>
-  import Heatmapper from '../Heatmapper.js'
+  import Heatmapper from '../custom/Heatmapper.js'
   export default {
     name: 'Generator',
     data: () => {
       return {
-        dataVerified: true,
+        heatmapSettings: true,
+        heatmapGenerated: false,
         filename: '',
         fileSelected: false,
         fileObj: null,
         isLoading: false,
         mainTitle: '',
-        xLab: '',
-        yLab: '',
+        rowAxis: '',
+        colAxis: '',
         colorScheme: 'Default',
         colorSchemeOptions: [
           { value: 'Default', text: 'Default Color Scheme' },
@@ -147,24 +157,20 @@
     methods: {
       generateHeatmap: function () {
         // this.isLoading = true
+        this.$root.$emit('bv::toggle::collapse', 'collapse-1')
         this.generationProgress = 0
         document.getElementById('graphDiv').innerHTML = ''
         var htmp = new Heatmapper('#graphDiv')
         var options = {
-          title: {
-            text: this.mainTitle
-          },
-          xAxis: {
-            text: this.xLab
-          },
-          yAxis: {
-            text: this.yLab
-          },
+          title: this.mainTitle,
+          rowAxis: this.rowAxis,
+          colAxis: this.colAxis,
           clustering: {
             type: this.clusteringType
           }
         }
         htmp.drawHeatmap(this.filename, options)
+        this.heatmapGenerated = true
       },
       chooseFile () {
         const { dialog } = require('electron').remote
@@ -175,6 +181,7 @@
           ]
         }).then((data) => {
           if (data.filePaths.length > 0) {
+            if (this.filename !== '') this.resetGUI()
             this.filename = data.filePaths[0]
             this.fileSelected = true
           }
@@ -182,15 +189,17 @@
       },
       cancelFile () {
         Object.assign(this.$data, this.$options.data()) // Clears all generator state data
-        document.getElementById('graphDiv').innerHTML = ''
+        this.resetGUI()
       },
-      dataVerification () {
-        // eslint-disable-next-line eqeqeq
-        var mainTitleValid = !/[^a-z0-9_.@()//-/\s]/i.test(this.mainTitle)
-        var xLabValid = !/[^a-z0-9_.@()//-/\s]/i.test(this.xLab)
-        var yLabValid = !/[^a-z0-9_.@()//-/\s]/i.test(this.yLab)
-        if (mainTitleValid && xLabValid && yLabValid) this.dataVerified = true // Regex for Filename, add some sort of alert that the file name isn't approp.
-        else this.dataVerified = false
+      resetGUI () {
+        document.getElementById('graphDiv').innerHTML = ''
+        this.heatmapGenerated = false
+        var heatmapSetupDiv = document.getElementById('collapse-1')
+        if (heatmapSetupDiv !== null) {
+          if (!heatmapSetupDiv.classList.contains('show')) {
+            this.$root.$emit('bv::toggle::collapse', 'collapse-1')
+          }
+        }
       }
     }
   }

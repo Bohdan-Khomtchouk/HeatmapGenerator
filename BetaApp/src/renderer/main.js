@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import BootstrapVue from 'bootstrap-vue/dist/bootstrap-vue.esm'
+import {BootstrapVue, BootstrapVueIcons} from 'bootstrap-vue/dist/bootstrap-vue.esm'
 import axios from 'axios'
 
 import App from './App'
@@ -16,6 +16,7 @@ Vue.config.productionTip = false
 
 /* eslint-disable no-new */
 Vue.use(BootstrapVue)
+Vue.use(BootstrapVueIcons)
 
 new Vue({
   components: { App },

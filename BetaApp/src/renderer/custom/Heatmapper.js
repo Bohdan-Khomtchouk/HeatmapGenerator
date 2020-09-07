@@ -2,11 +2,12 @@
 // Heatmapper.js
 // Module for handling pure heatmap/dendrogram generation
 
+import HeatmapObject from './heatmap'
+
 export default class Heatmapper {
   constructor (parent) {
     this.parent = parent
     this.d3 = require('d3')
-    this.options = {}
   }
 
   /**
@@ -14,30 +15,24 @@ export default class Heatmapper {
    * @param {String} filePath The path to the data file (.csv, .txt)
    * @param {Dictionary} options Graphical and data-based customizations
    */
-  drawHeatmap (filePath, options) {
-    options.margin = {top: 100, right: 100, bottom: 100, left: 100}
-    options.clusterSpace = 50
-    options.cellSize = 50
-    this.options = options
-
+  drawHeatmap (filePath, settings) {
+    this.settings = settings
     var self = this
     self.parse(filePath).then(function (parsedData) {
       self.process(parsedData)
     }).then(function () {
-      if (self.options.clustering.type !== 'none') {
+      if (settings.clustering.type !== 'none') {
         self.cluster()
-      } else {
-        self.options.clusterSpace = 0
       }
     }).then(function () {
-      self.canvas(self.options)
+      self.canvas()
     }).then(function () {
-      self.labels(self.options)
+      self.labels()
     }).then(function () {
-      self.heatmap(self.options)
+      self.heatmap()
     }).then(function () {
-      if (self.options.clustering.type !== 'none') {
-        self.dendrogram(self.options)
+      if (settings.clustering.type !== 'none') {
+        self.dendrogram()
       }
     }).then(function () {
     }).catch((error) => {
@@ -73,11 +68,19 @@ export default class Heatmapper {
       var diff = yLabels.length - inputData[0].length
       if (diff > 0) yLabels.shift(diff) // if there are more column labels than data points, erase the extras (i.e. the corner label)
 
-      var payload = {}
-      payload.matrix = inputData
-      payload.rowLabels = xLabels
-      payload.colLabels = yLabels
-      self.payload = payload
+      self.payload = {
+        matrix: inputData,
+        rowLabels: {
+          data: xLabels,
+          width: null
+        },
+        colLabels: {
+          data: yLabels,
+          height: null
+        },
+        rowTree: null,
+        colTree: null
+      }
       resolve(null)
     })
   }
@@ -92,7 +95,7 @@ export default class Heatmapper {
           row.push(self.payload.matrix[x][y])
         }
         matrixByRows.push({
-          'name': self.payload.rowLabels[x],
+          'name': self.payload.rowLabels.data[x],
           'value': row
         })
       }
@@ -109,7 +112,7 @@ export default class Heatmapper {
           col.push(self.payload.matrix[x][y])
         }
         matrixByColumns.push({
-          'name': self.payload.colLabels[y],
+          'name': self.payload.colLabels.data[y],
           'value': col
         })
       }
@@ -119,21 +122,19 @@ export default class Heatmapper {
         .verbose(false)
         .posKey('value')
         .data(matrixByColumns)
-      var rowLabels = []
+      var rowLabelsArr = []
       var rowNodes = clusteredRows.orderedNodes()
-      // console.log(rowNodes)
       for (let n in rowNodes) {
-        rowLabels.push(rowNodes[n].name)
+        rowLabelsArr.push(rowNodes[n].name)
       }
-      var colLabels = []
+      var colLabelsArr = []
       var colNodes = clusteredColumns.orderedNodes()
       for (let m in colNodes) {
-        colLabels.push(colNodes[m].name)
+        colLabelsArr.push(colNodes[m].name)
       }
 
       var rowOrder = clusteredRows.tree().indexes
       var colOrder = clusteredColumns.tree().indexes
-      // console.log(clusteredRows.tree())
       var reorganizedMatrix = []
       for (let x = 0, l = self.payload.matrix.length; x < l; x++) {
         let row = []
@@ -144,30 +145,83 @@ export default class Heatmapper {
         }
         reorganizedMatrix.push(row)
       }
-      self.payload.matrix = reorganizedMatrix
-      self.payload.clusteredRows = clusteredRows
-      self.payload.clusteredColumns = clusteredColumns
-      self.payload.rowLabels = rowLabels
-      self.payload.colLabels = colLabels
+      self.payload = {
+        matrix: reorganizedMatrix,
+        rowLabels: {
+          data: rowLabelsArr,
+          width: null
+        },
+        colLabels: {
+          data: colLabelsArr,
+          height: null
+        },
+        rowTree: clusteredRows,
+        colTree: clusteredColumns
+      }
       if (self.payload.matrix.length === 0 || colNodes.length === 0 || rowNodes.length === 0) return reject(new Error('Failed to cluster data.'))
       else resolve(null)
     })
   }
   canvas () {
     var self = this
-    var colNumber = self.payload.matrix[0].length
-    var rowNumber = self.payload.matrix.length
-    self.options.width = self.options.cellSize * colNumber + self.options.clusterSpace // - margin.left - margin.right,
-    self.options.height = self.options.cellSize * rowNumber + self.options.clusterSpace // - margin.top - margin.bottom
     return new Promise(function (resolve, reject) {
-      // Step 1: Create a dummy canvas
-      // Step 2: Draw labels to the dummy canvas, keep track of the longest text length with a for each loop
-      // Step 3: Wipe the text and canvas from steps 1/2
-      // Step 4: Rebuild the canvas, all components should now have known lengths.
       self.svg = self.d3.select(self.parent)
         .append('svg')
-        .attr('width', self.options.width + self.options.margin.left + self.options.margin.right)
-        .attr('height', self.options.height + self.options.margin.top + self.options.margin.bottom)
+        .attr('width', 1000)
+        .attr('height', 1000)
+      var maxRowLabelWidth = 0
+      var maxColLabelHeight = 0
+      self.svg.append('g')
+        .attr('class', 'rowLabels')
+        .selectAll('.rowLabelg')
+        .data(self.payload.rowLabels.data)
+        .enter()
+        .append('text')
+        .text(function (d) {
+          return d
+        })
+        .attr('x', 0)
+        .attr('y', 0)
+        .style('text-anchor', 'start')
+        .attr('class', function (d, i) {
+          return 'rowLabel mono r' + i
+        })
+        .text(function (d) { return d })
+        .each(function (d, i) {
+          var thisWidth = this.getComputedTextLength()
+          if (thisWidth > maxRowLabelWidth) maxRowLabelWidth = thisWidth
+          this.remove() // remove them just after displaying them
+        })
+      self.payload.rowLabels.width = maxRowLabelWidth
+      self.svg.append('g')
+        .attr('class', 'colLabels')
+        .selectAll('.colLabelg')
+        .data(self.payload.colLabels.data)
+        .enter()
+        .append('text')
+        .text(function (d) {
+          return d
+        })
+        .attr('x', 0)
+        .attr('y', 0)
+        .style('text-anchor', 'end')
+        .attr('class', function (d, i) {
+          return 'colLabel mono c' + i
+        })
+        .text(function (d) { return d })
+        .each(function (d, i) {
+          var thisWidth = this.getComputedTextLength()
+          if (thisWidth > maxColLabelHeight) maxColLabelHeight = thisWidth
+          this.remove() // remove them just after displaying them
+        })
+      self.payload.colLabels.height = maxColLabelHeight
+      self.heatmapObject = {}
+      self.heatmapObject = new HeatmapObject(self.payload, self.settings)
+      self.d3.select(self.parent).selectAll('*').remove()
+      self.svg = self.d3.select(self.parent)
+        .append('svg')
+        .attr('width', self.heatmapObject.spacingTill('horizontal'))
+        .attr('height', self.heatmapObject.spacingTill('vertical'))
       resolve(null)
     })
   }
@@ -177,7 +231,7 @@ export default class Heatmapper {
       self.svg.append('g')
         .attr('class', 'rowLabels')
         .selectAll('.rowLabelg')
-        .data(self.payload.rowLabels)
+        .data(self.heatmapObject.data.rowLabels.data)
         .enter()
         .append('text')
         .text(function (d) {
@@ -185,17 +239,17 @@ export default class Heatmapper {
         })
         .attr('x', 0)
         .attr('y', function (d, i) {
-          return (i + 1) * self.options.cellSize + self.options.clusterSpace
+          return i * self.heatmapObject.appearance.heatmap.cellSize + self.heatmapObject.spacingTill('vertical', 'tree')
         })
         .style('text-anchor', 'start')
-        .attr('transform', 'translate(' + (self.options.width + self.options.cellSize + 5) + ',' + self.options.cellSize / 1.5 + ')')
+        .attr('transform', 'translate(' + (self.heatmapObject.spacingTill('horizontal', 'heatmap') + self.heatmapObject.appearance.rowAxis.labels.padding.left) + ',' + self.heatmapObject.appearance.heatmap.cellSize / 1.5 + ')')
         .attr('class', function (d, i) {
           return 'rowLabel mono r' + i
         })
       self.svg.append('g')
         .attr('class', 'colLabels')
         .selectAll('.colLabelg')
-        .data(self.payload.colLabels)
+        .data(self.heatmapObject.data.colLabels.data)
         .enter()
         .append('text')
         .text(function (d) {
@@ -203,45 +257,39 @@ export default class Heatmapper {
         })
         .attr('x', 0)
         .attr('y', function (d, i) {
-          return (i + 1) * self.options.cellSize
+          return i * self.heatmapObject.appearance.heatmap.cellSize + self.heatmapObject.spacingTill('horizontal', 'tree')
         })
         .style('text-anchor', 'end')
-        .attr('transform', 'translate(' + self.options.cellSize / 2 + ',-6) rotate (-90)  translate( -' + (self.options.height + self.options.cellSize * 2 - 30) + ',' + self.options.clusterSpace + ')')
+        .attr('transform', 'translate(' + self.heatmapObject.appearance.heatmap.cellSize / 2 + ', 0) rotate (-90)  translate( -' + (self.heatmapObject.spacingTill('vertical', 'heatmap') + self.heatmapObject.appearance.colAxis.labels.padding.top) + ',' + 0 + ')')
         .attr('class', function (d, i) {
           return 'colLabel mono c' + i
         })
 
       // Title Labelling
-      if (self.options.title) {
+      if (self.heatmapObject.settings.title !== '') {
         self.svg.append('text')
-          .attr('x', ((self.options.width + self.options.margin.left + self.options.margin.right) / 2))
-          .attr('y', 16)
+          .attr('x', self.heatmapObject.spacingTill('horizontal', 'tree') + (self.heatmapObject.appearance.heatmap.width / 2))
+          .attr('y', self.heatmapObject.spacingTill('vertical', 'margin1'))
           .attr('text-anchor', 'middle')
           .style('font-size', '16px')
-          .style('text-decoration', 'bold')
-          .text(self.options.title.text)
+          .text(self.heatmapObject.settings.title)
       }
       // Axis Labelling
-      if (self.options.xAxis) {
-        var colLabelHeight = self.d3.select('.colLabels').node().getBBox().height
+      if (self.heatmapObject.settings.colAxis !== '') {
         self.svg.append('text')
-          .attr('transform',
-            'translate(' + ((self.options.width + self.options.margin.left + self.options.margin.right) / 2) + ' ,' +
-            (self.options.height + self.options.margin.top + colLabelHeight) + ')')
-          .style('text-anchor', 'middle')
-          .text(self.options.xAxis.text)
+          .attr('x', self.heatmapObject.spacingTill('horizontal', 'tree') + (self.heatmapObject.appearance.heatmap.width / 2))
+          .attr('y', self.heatmapObject.spacingTill('vertical', 'labels') + self.heatmapObject.appearance.colAxis.title.padding.top)
+          .attr('text-anchor', 'middle')
+          .text(self.heatmapObject.settings.colAxis)
       }
-      if (self.options.yAxis) {
-        var rowLabelWidth = self.d3.select('.rowLabels').node().getBBox().width
+      if (self.heatmapObject.settings.rowAxis !== '') {
         self.svg.append('text')
+          .attr('x', -(self.heatmapObject.spacingTill('vertical', 'tree') + (self.heatmapObject.appearance.heatmap.height / 2)))
+          .attr('y', self.heatmapObject.spacingTill('horizontal', 'labels') + self.heatmapObject.appearance.rowAxis.title.padding.left)
           .attr('transform', 'rotate(-90)')
-          .attr('y', self.options.width + self.options.margin.left + rowLabelWidth)
-          .attr('x', 0 - ((self.options.height + self.options.clusterSpace + self.options.margin.top) / 2))
-          .attr('dy', '1em')
-          .style('text-anchor', 'middle')
-          .text(self.options.yAxis.text)
+          .attr('text-anchor', 'middle')
+          .text(self.heatmapObject.settings.rowAxis)
       }
-
       resolve(null)
     })
   }
@@ -252,13 +300,11 @@ export default class Heatmapper {
       var matrix = []
       var min = 0
       var max = 0
-      var colNumber = self.payload.matrix[0].length
-      var rowNumber = self.payload.matrix.length
-      for (var r = 0; r < rowNumber; r++) {
-        for (var c = 0; c < colNumber; c++) {
-          matrix.push({row: r + 1, col: c + 1, value: self.payload.matrix[r][c]})
-          min = Math.min(min, self.payload.matrix[r][c])
-          max = Math.max(max, self.payload.matrix[r][c])
+      for (var r = 0; r < self.heatmapObject.appearance.heatmap.rows; r++) {
+        for (var c = 0; c < self.heatmapObject.appearance.heatmap.columns; c++) {
+          matrix.push({row: r, col: c, value: self.heatmapObject.data.matrix[r][c]})
+          min = Math.min(min, self.heatmapObject.data.matrix[r][c])
+          max = Math.max(max, self.heatmapObject.data.matrix[r][c])
         }
       }
       var middle = self.d3.median(matrix, function (d) {
@@ -273,16 +319,16 @@ export default class Heatmapper {
         .enter()
         .append('rect')
         .attr('x', function (d) {
-          return d.col * self.options.cellSize + self.options.clusterSpace
+          return d.col * self.heatmapObject.appearance.heatmap.cellSize + self.heatmapObject.spacingTill('horizontal', 'tree')
         })
         .attr('y', function (d) {
-          return d.row * self.options.cellSize + self.options.clusterSpace
+          return d.row * self.heatmapObject.appearance.heatmap.cellSize + self.heatmapObject.spacingTill('vertical', 'tree')
         })
         .attr('class', function (d) {
-          return 'cell cell-border cr' + (d.row - 1) + ' cc' + (d.col - 1)
+          return 'cell cell-border cr' + d.row + ' cc' + d.col
         })
-        .attr('width', self.options.cellSize)
-        .attr('height', self.options.cellSize)
+        .attr('width', self.heatmapObject.appearance.heatmap.cellSize)
+        .attr('height', self.heatmapObject.appearance.heatmap.cellSize)
         .style('fill', function (d) {
           return colorScale(d.value)
         })
@@ -309,7 +355,7 @@ export default class Heatmapper {
             .style('opacity', '0')
             .select('#value')
             .html(
-              'Cell type: ' + self.payload.colLabels[d.col - 1] + '<br>Sample name: ' + self.payload.rowLabels[d.row - 1] +
+              'Cell type: ' + self.heatmapObject.data.colLabels.data[d.col] + '<br>Sample name: ' + self.heatmapObject.data.rowLabels.data[d.row] +
               '<br>Value: ' + d.value
             )
           // Show the tooltip
@@ -336,14 +382,14 @@ export default class Heatmapper {
       function elbow (d, i) {
         return 'M' + d.source.y + ',' + d.source.x + 'V' + d.target.x + 'H' + d.target.y
       }
-      self.rowRoot = self.d3.hierarchy(self.payload.clusteredRows.tree())
-      self.colRoot = self.d3.hierarchy(self.payload.clusteredColumns.tree())
+      self.rowRoot = self.d3.hierarchy(self.heatmapObject.data.rowTree.tree())
+      self.colRoot = self.d3.hierarchy(self.heatmapObject.data.colTree.tree())
       self.rowCluster = self.d3.cluster()
-        .size([self.options.height - self.options.clusterSpace, self.options.clusterSpace])
+        .size([self.heatmapObject.appearance.heatmap.height, self.heatmapObject.appearance.clustering.row.size])
       self.colCluster = self.d3.cluster()
-        .size([self.options.width - self.options.clusterSpace, self.options.clusterSpace])
+        .size([self.heatmapObject.appearance.heatmap.width, self.heatmapObject.appearance.clustering.col.size])
 
-      var rTree = self.svg.append('g').attr('class', 'rtree').attr('transform', 'translate (20, ' + (self.options.clusterSpace + self.options.cellSize) + ')')
+      var rTree = self.svg.append('g').attr('class', 'rtree').attr('transform', 'translate (' + self.heatmapObject.spacingTill('horizontal', 'margin1') + ', ' + self.heatmapObject.spacingTill('vertical', 'tree') + ')')
       rTree.selectAll('.rlink')
         .data(self.rowCluster(self.rowRoot).links())
         .enter().append('path')
@@ -360,7 +406,7 @@ export default class Heatmapper {
         .attr('transform', function (d) {
           return 'translate(' + d.y + ',' + d.x + ')'
         })
-      var cTree = self.svg.append('g').attr('class', 'ctree').attr('transform', 'rotate (90), translate (30, -' + (self.options.clusterSpace + self.options.cellSize) + ') scale(1,-1)')
+      var cTree = self.svg.append('g').attr('class', 'ctree').attr('transform', 'rotate (90), translate (' + self.heatmapObject.spacingTill('vertical', 'title') + ', -' + (self.heatmapObject.spacingTill('horizontal', 'tree')) + ') scale(1,-1)')
       cTree.selectAll('.clink')
         .data(self.colCluster(self.colRoot).links())
         .enter().append('path')
