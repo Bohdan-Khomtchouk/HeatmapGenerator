@@ -1,0 +1,1 @@
+cmd_Release/cclust.node := c++ -bundle -undefined dynamic_lookup -Wl,-no_pie -Wl,-search_paths_first -mmacosx-version-min=10.10 -arch x86_64 -L./Release -stdlib=libc++  -o Release/cclust.node Release/obj.target/cclust/src/heatmap_clustering_js_module.o Release/bonsaiclust.a 
