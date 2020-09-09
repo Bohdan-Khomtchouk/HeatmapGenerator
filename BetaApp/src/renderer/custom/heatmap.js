@@ -229,7 +229,7 @@ export default class Heatmap {
    * @param {String} prop Name of property key to change
    * @param {Number} change Name of new value
    */
-  updateAppearance (comp, prop, change) {
+  updateAppearance (comp, prop, change, callback) {
     var _ = require('lodash')
     _.set(this.appearance, prop, change)
     var index = this.components[comp.direction].map[comp.name]
@@ -237,6 +237,7 @@ export default class Heatmap {
     let tot = 0
     subComps.forEach(subComp => { tot += _.get(this.appearance, subComp) })
     this.components[comp.direction].values[index] = tot
+    callback()
   }
 
   /**

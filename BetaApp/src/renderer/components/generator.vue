@@ -79,17 +79,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <h5 class="">Appearance</h5>
-                            <div class="container pb-2">
-                                <div class="row align-items-center justify-content-start pb-2">
-                                    <div class="col-sm input-group">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">Color Scheme</span>
-                                        </div>
-                                        <b-form-select v-model="colorScheme" :options="colorSchemeOptions"></b-form-select>
-                                    </div>
-                                </div>
-                            </div>
                             <div class="row mt-4 pb-2">
                                 <div class="col-12 d-flex justify-content-center">
                                     <b-button v-if="!isLoading" variant="success" @click="generateHeatmap">Generate Heatmap</b-button>
@@ -151,7 +140,8 @@
           { value: 'row', text: 'Row' },
           { value: 'col', text: 'Column' }
         ],
-        generationProgress: 0
+        generationProgress: 0,
+        htmp: null
       }
     },
     methods: {
@@ -160,7 +150,7 @@
         this.$root.$emit('bv::toggle::collapse', 'collapse-1')
         this.generationProgress = 0
         document.getElementById('graphDiv').innerHTML = ''
-        var htmp = new Heatmapper('#graphDiv')
+        this.htmp = new Heatmapper('#graphDiv')
         var options = {
           title: this.mainTitle,
           rowAxis: this.rowAxis,
@@ -169,7 +159,7 @@
             type: this.clusteringType
           }
         }
-        htmp.drawHeatmap(this.filename, options)
+        this.htmp.drawHeatmap(this.filename, options)
         this.heatmapGenerated = true
       },
       chooseFile () {
