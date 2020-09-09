@@ -6,9 +6,12 @@
 #include <map>
 #include <vector>
 #include <string.h>
+#include <node_api.h>
+
 extern "C" {
     #include "cluster.h"
 }
+
 using namespace std;
 
 class TreeNode {
@@ -17,6 +20,42 @@ class TreeNode {
         float Height;
         vector<int> Indices;
         vector<TreeNode> Children;
+
+        string stringify() {
+
+            string children = "";
+            // need to account for cases where leaves are missing
+            for (TreeNode &t : Children) {
+                string current_string = t.stringify();
+                children += current_string;
+                children += ",";
+            }
+            if (children != ""){
+                children.pop_back();
+            }
+
+            ostringstream  stream;
+            stream << "TreeNode(" << NodeId << "," << Height << ",";
+            stream << "[";
+
+            for (unsigned i=0; i<Indices.size(); i++) {
+                if (i == Indices.size()-1) {
+                    stream << Indices.at(i);
+                } else {
+                    stream << Indices.at(i) << ",";
+                }
+            }
+            
+            stream << "],";
+            stream << "[" << children << ",";
+
+            string output = stream.str();
+            output.pop_back();
+            output.append("]");
+            output.append(")");
+
+            return output;
+        }
 };
 
 class Leaf : public TreeNode {
@@ -80,13 +119,32 @@ void reorder_matrix(T** &matrix, int* index, int num_data_rows, int num_data_col
 
 } 
 
-int main()
-{  
-    
+napi_value ClusterC(napi_env env, napi_callback_info info) {
+    napi_status status;
+    size_t argc = 1;
+    size_t buf_size = 1048576; ///// might need to increase
+    size_t input_bytes = 0;
+    char input[buf_size];
+    napi_value argv[1];
+    status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
+
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+    }
+
+    status = napi_get_value_string_utf8(env, argv[0], input, buf_size, &input_bytes);
+
+    if (input_bytes >= buf_size-1) {
+        napi_throw_error(env, NULL, "Input too long");
+    }
+
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Invalid input");
+    }
+
+
     clock_t start, mid, mid2, end;
     start = clock();
-
-    string input = "{heatmap_input:[[,col1,col2],[row1,1,2],[row2,3,4]],\ndistance_function:e,\nlinkage_function:a,\naxes:r}";
 
     /* =========================== Input Parsing (Destringifying) =========================== */
 
@@ -130,24 +188,18 @@ int main()
     if (possible_distance_functions.find(distance_function) == string::npos) {
         cerr << endl << "Distance function given is not an option." << endl;
         cerr << "See readme for more info" << endl;
-
-        return 1;
     }
 
     string possible_linkage_functions = "smac";
     if (possible_linkage_functions.find(linkage_function) == string::npos) {
         cerr << endl << "Linkage function given is not an option." << endl;
         cerr << "See readme for more info" << endl;
-
-        return 1;
     }
 
     string possible_dendro_axes = "rcb";
     if (possible_dendro_axes.find(axes) == string::npos) {
         cerr << endl << "Axes given is not an option." << endl;
         cerr << "Should be 'r', 'c', or 'b' (row / col / both)" << endl;
-
-        return 1;
     }
 
     bool col_dendro_flag = false;
@@ -240,11 +292,14 @@ int main()
 
     map<int, TreeNode> col_node_dict;
     int cur_col_node_id = -1;
+    int col_nnodes = num_data_cols-1;
+
     map<int, TreeNode> row_node_dict;
     int cur_row_node_id = -1;
+    int row_nnodes = num_data_rows-1;
+
 
     if (col_dendro_flag) {
-        int col_nnodes = num_data_cols-1;
 
         // Get dendrogram tree for column data
         double *col_weight = new double[num_data_cols];
@@ -256,13 +311,6 @@ int main()
         {
             cerr << ("treecluster routine failed due to insufficient memory") << endl;
             free(col_weight);
-            return 1;
-        }
-
-        // Print tree data
-        cerr << "Node     Item 1   Item 2    Distance\n" << endl;
-        for(int i=0; i<col_nnodes; i++){
-            cerr << -i-1 << "     " << col_tree[i].left << "     " << col_tree[i].right << "     " << col_tree[i].distance << endl;
         }
 
         // Sort column tree nodes
@@ -329,17 +377,6 @@ int main()
             copy (left_child_indices.begin(), left_child_indices.end(), back_inserter(new_tree_node.Indices));
             copy (right_child_indices.begin(), right_child_indices.end(), back_inserter(new_tree_node.Indices));
 
-            /*
-            cerr << "New node: " << cur_col_node_id << endl;
-            cerr << "children" << endl;
-            for(int j=0; j < new_tree_node.Indices.size(); j++) {
-                cerr << new_tree_node.Indices[j]
-                << endl;
-            }
-            cerr << endl;
-            */
-
-
             col_node_dict[cur_col_node_id] = new_tree_node;
             cur_col_node_id--;
             cur_height++;
@@ -351,7 +388,6 @@ int main()
     }
 
     if (row_dendro_flag) {
-        int row_nnodes = num_data_rows-1;
 
         double *row_weight = new double[num_data_rows];
         for(int i = 0; i < num_data_rows; ++i) {
@@ -363,7 +399,6 @@ int main()
         {
             cerr << ("treecluster routine failed due to insufficient memory\n");
             free(row_weight);
-            return 1;
         }
 
         // Sort row tree nodes
@@ -442,18 +477,6 @@ int main()
 
     mid2 = clock();
 
-    /*
-    cerr << "AFTER" << endl;
-    for (int i = 0; i < num_data_rows; i++)
-    {
-        for (int j = 0; j < num_data_cols; j++)
-        {
-            cerr << heatmap_data[i][j] << ' ';
-        }
-        cerr << endl;
-    }
-    */
-
     /* =========================== Output Generation (Stringifying) =========================== */
 
     string output = "{heatmap:[";
@@ -481,22 +504,18 @@ int main()
     output.pop_back();
 
     output.append("],\ncol_tree:");
+
     if (col_dendro_flag) {
-        /// Stringify col tree and append to output
-        TreeNode col_root = row_node_dict[cur_col_node_id+1];
-        // output.append(string(col_root))
-        cerr << "";
+        output.append(col_node_dict[-col_nnodes].stringify());
     }
     else {
         output.append("None");
     }
 
     output.append(",\nrow_tree:");
+
     if (row_dendro_flag) {
-        /// Stringify row tree and append to output
-        TreeNode row_root = row_node_dict[cur_row_node_id+1];
-        // output.append(string(row_root))
-        cerr << "";
+        output.append(row_node_dict[-row_nnodes].stringify());
     }
     else {
         output.append("None");
@@ -531,5 +550,33 @@ int main()
          << time_taken_overall << setprecision(5); 
     cerr << " sec " << endl; 
 
-    return 0;
+    napi_value return_napi_string;
+
+    status = napi_create_string_utf8(env, output.c_str(), output.length(), &return_napi_string);
+
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Unable to create return value");
+    }
+
+    return return_napi_string;
 }
+
+
+napi_value Init(napi_env env, napi_value exports) {
+  napi_status status;
+  napi_value fn;
+
+  status = napi_create_function(env, NULL, 0, ClusterC, NULL, &fn);
+  if (status != napi_ok) {
+    napi_throw_error(env, NULL, "Unable to wrap native function");
+  }
+
+  status = napi_set_named_property(env, exports, "ccluster", fn);
+  if (status != napi_ok) {
+    napi_throw_error(env, NULL, "Unable to populate exports");
+  }
+
+  return exports;
+}
+
+NAPI_MODULE(NODE_GYP_MODULE_NAME, Init)
