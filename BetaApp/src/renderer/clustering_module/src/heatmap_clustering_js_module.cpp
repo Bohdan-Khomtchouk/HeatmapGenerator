@@ -82,9 +82,8 @@ void reorder_strings(vector<string> &label_names, int* indices, int n)
 template <typename T>
 void reorder_matrix(T** &matrix, int* index, int num_data_rows, int num_data_cols, char axis) 
 { 
-    string possible_axes = "rc";
-    if (possible_axes.find(axis) == string::npos) {
-        cerr << endl << "Axis value must be 'r' (row) or 'c' (column)" << endl;
+    if (axis != 0 && axis != 1) {
+        cerr << endl << "Axis value must be 0 (column) or 1 (row)" << endl;
         return;
     }
 
@@ -94,7 +93,7 @@ void reorder_matrix(T** &matrix, int* index, int num_data_rows, int num_data_col
         temp[i] = new double[num_data_cols];
         for (int j=0; j< num_data_cols; j++) 
         {
-            if (axis == 'r') {
+            if (axis == 1) {
                 temp[i][j] = matrix[index[i]][j]; 
             }
             else {
@@ -118,6 +117,135 @@ void reorder_matrix(T** &matrix, int* index, int num_data_rows, int num_data_col
     free(temp);
 
 } 
+
+void cluster_axis(int num_data_rows, int num_data_cols, char distance_func, char linkage_func, int axis, double** &heatmap_data, int** &mask, vector<string> &label_names, map<int, TreeNode> &node_dict){
+    
+        int num_data_leaves, nnodes;
+        if (axis == 0){
+            num_data_leaves = num_data_cols;
+            nnodes = num_data_cols - 1;
+        }
+        else { // axis == 1
+            num_data_leaves = num_data_rows;
+            nnodes = num_data_rows - 1;
+        }
+
+        // Get dendrogram tree for axis 
+        double *weights = new double[num_data_leaves];
+        for(int i = 0; i < num_data_leaves; ++i) {
+            weights[i] = 1.0;
+        }
+        Node* clust_tree = treecluster(num_data_rows, num_data_cols, heatmap_data, mask, weights, axis, distance_func, linkage_func, 0);
+        if (!clust_tree)
+        {
+            cerr << ("treecluster routine failed due to insufficient memory") << endl;
+            free(weights);
+        }
+
+        // Print tree data
+
+        /*
+        cerr << "Node     Item 1   Item 2    Distance\n" << endl;
+        for(int i=0; i<nnodes; i++){
+            cerr << -i-1 << "     " << clust_tree[i].left << "     " << clust_tree[i].right << "     " << clust_tree[i].distance << endl;
+        }
+        */;
+
+        // Sort column tree nodes
+        int *sorted_indices = new int[num_data_leaves];
+
+        int sorted_index = 0;
+        for (int i = 0; i < nnodes; i++) {
+            if (clust_tree[i].left >= 0) {
+                sorted_indices[sorted_index] = clust_tree[i].left;
+                sorted_index++;
+            }
+            if (clust_tree[i].right >= 0) {
+                sorted_indices[sorted_index] = clust_tree[i].right;
+                sorted_index++;
+            }
+        }
+
+        // Reorder column labels
+        reorder_strings(label_names, sorted_indices, num_data_leaves);
+        // Reorder heatmap columns
+        reorder_matrix(heatmap_data, sorted_indices, num_data_rows, num_data_cols, axis);
+        // Reorder mask columns
+        reorder_matrix(mask, sorted_indices, num_data_rows, num_data_cols, axis);
+
+        // Building TreeNode dict
+        int cur_node_id = -1;
+
+        // Remapping leaf indices due to sorting heatmap data: original index --> new index
+        // We need this because the clustering algorithm mapped the tree according to the original col/row indices
+        map<int,int> new_leaf_id;
+        for (int i = 0; i < num_data_leaves; i++) {
+            new_leaf_id[sorted_indices[i]] = i;
+        }
+
+        // Add leaves
+        for(int i = 0; i < num_data_leaves; ++i) {
+            Leaf  new_leaf;
+            new_leaf.NodeId = i;
+            new_leaf.Height = 0;
+            new_leaf.Indices = {(int)i};
+            new_leaf.Children = {};
+            new_leaf.Label = label_names[i];
+            node_dict[i] = new_leaf;
+        }
+
+        // Add other nodes
+        int cur_height = 1;
+        
+        for(int i=0; i<nnodes; i++){
+            TreeNode new_tree_node;
+            new_tree_node.NodeId = cur_node_id;
+            new_tree_node.Height = cur_height;
+            
+            int left_child_id = clust_tree[i].left;
+            int right_child_id = clust_tree[i].right;
+
+            if (left_child_id >= 0) {
+                left_child_id = new_leaf_id[left_child_id];
+            }
+            if (right_child_id >= 0) {
+                right_child_id = new_leaf_id[right_child_id];
+            }
+
+            // Add all descendents to Children
+            new_tree_node.Children.push_back(node_dict[left_child_id]);
+            new_tree_node.Children.push_back(node_dict[right_child_id]);
+            vector<TreeNode> left_child_children = node_dict[left_child_id].Children;
+            vector<TreeNode> right_child_children = node_dict[right_child_id].Children;
+            copy (left_child_children.begin(), left_child_children.end(), back_inserter(new_tree_node.Children));
+            copy (right_child_children.begin(), right_child_children.end(), back_inserter(new_tree_node.Children));
+
+            // Add itself and all descendents to Indices
+            new_tree_node.Indices.push_back(cur_node_id);
+            vector<int> left_child_indices = node_dict[left_child_id].Indices;
+            vector<int> right_child_indices = node_dict[right_child_id].Indices;
+            copy (left_child_indices.begin(), left_child_indices.end(), back_inserter(new_tree_node.Indices));
+            copy (right_child_indices.begin(), right_child_indices.end(), back_inserter(new_tree_node.Indices));
+
+            /*
+            cerr << "New node: " << cur_node_id << endl;
+            cerr << "children" << endl;
+            for(int j=0; j < new_tree_node.Indices.size(); j++) {
+                cerr << new_tree_node.Indices[j]
+                << endl;
+            }
+            cerr << endl;
+            */
+
+
+            node_dict[cur_node_id] = new_tree_node;
+            cur_node_id--;
+            cur_height++;
+        }
+
+        free(clust_tree);
+        free(weights);
+}
 
 napi_value ClusterC(napi_env env, napi_callback_info info) {
     napi_status status;
@@ -289,193 +417,29 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
     mid = clock();
 
     /* =========================== Hierarchical clustering =========================== */
-
     map<int, TreeNode> col_node_dict;
-    int cur_col_node_id = -1;
-    int col_nnodes = num_data_cols-1;
-
     map<int, TreeNode> row_node_dict;
-    int cur_row_node_id = -1;
-    int row_nnodes = num_data_rows-1;
-
 
     if (col_dendro_flag) {
-
-        // Get dendrogram tree for column data
-        double *col_weight = new double[num_data_cols];
-        for(int i = 0; i < num_data_cols; ++i) {
-            col_weight[i] = 1.0;
-        }
-        Node* col_tree = treecluster(num_data_rows, num_data_cols, heatmap_data, mask, col_weight, 1, distance_function, linkage_function, 0);
-        if (!col_tree)
-        {
-            cerr << ("treecluster routine failed due to insufficient memory") << endl;
-            free(col_weight);
-        }
-
-        // Sort column tree nodes
-        int *col_sorted_indices = new int[num_data_cols];
-
-        int col_sorted_index = 0;
-        for (int i = 0; i < col_nnodes; i++) {
-            if (col_tree[i].left >= 0) {
-                col_sorted_indices[col_sorted_index] = col_tree[i].left;
-                col_sorted_index++;
-            }
-            if (col_tree[i].right >= 0) {
-                col_sorted_indices[col_sorted_index] = col_tree[i].right;
-                col_sorted_index++;
-            }
-        }
-
-
-        // Reorder column labels
-        reorder_strings(col_names, col_sorted_indices, num_data_cols);
-        // Reorder heatmap columns
-        reorder_matrix(heatmap_data, col_sorted_indices, num_data_rows, num_data_cols, 'c');
-        // Reorder mask columns
-        reorder_matrix(mask, col_sorted_indices, num_data_rows, num_data_cols, 'c');
-
-        // Creating TreeNode dict
-
-        //// TODO: May need to remap leaf indices due to sorting heatmap data
-
-        // Add leaves
-        for(int i = 0; i < num_data_cols; ++i) {
-            Leaf  new_leaf;
-            new_leaf.NodeId = i;
-            new_leaf.Height = 0;
-            new_leaf.Indices = {(int)i};
-            new_leaf.Children = {};
-            new_leaf.Label = col_names[i];
-            col_node_dict[i] = new_leaf;
-        }
-
-        // Add other nodes
-        int cur_height = 1;
-        
-        for(int i=0; i<col_nnodes; i++){
-            TreeNode new_tree_node;
-            new_tree_node.NodeId = cur_col_node_id;
-            new_tree_node.Height = cur_height;
-            
-            int left_child_id = col_tree[i].left;
-            int right_child_id = col_tree[i].right;
-
-            // Add all descendents to Children
-            new_tree_node.Children.push_back(col_node_dict[left_child_id]);
-            new_tree_node.Children.push_back(col_node_dict[right_child_id]);
-            vector<TreeNode> left_child_children = col_node_dict[left_child_id].Children;
-            vector<TreeNode> right_child_children = col_node_dict[right_child_id].Children;
-            copy (left_child_children.begin(), left_child_children.end(), back_inserter(new_tree_node.Children));
-            copy (right_child_children.begin(), right_child_children.end(), back_inserter(new_tree_node.Children));
-
-            // Add itself and all descendents to Indices
-            new_tree_node.Indices.push_back(cur_col_node_id);
-            vector<int> left_child_indices = col_node_dict[left_child_id].Indices;
-            vector<int> right_child_indices = col_node_dict[right_child_id].Indices;
-            copy (left_child_indices.begin(), left_child_indices.end(), back_inserter(new_tree_node.Indices));
-            copy (right_child_indices.begin(), right_child_indices.end(), back_inserter(new_tree_node.Indices));
-
-            col_node_dict[cur_col_node_id] = new_tree_node;
-            cur_col_node_id--;
-            cur_height++;
-        }
-
-        free(col_tree);
-        free(col_weight);
-
+        cluster_axis(num_data_rows, num_data_cols, distance_function, linkage_function, 0, heatmap_data, mask, col_names, col_node_dict);
     }
-
     if (row_dendro_flag) {
-
-        double *row_weight = new double[num_data_rows];
-        for(int i = 0; i < num_data_rows; ++i) {
-            row_weight[i] = 1.0;
-        }
-        Node* row_tree = treecluster(num_data_rows, num_data_cols, heatmap_data, mask, row_weight, 0, distance_function, linkage_function, 0);
-
-        if (!row_tree)
-        {
-            cerr << ("treecluster routine failed due to insufficient memory\n");
-            free(row_weight);
-        }
-
-        // Sort row tree nodes
-        int *row_sorted_indices = new int[num_data_rows];
-
-        int row_sorted_index = 0;
-        for (int i = 0; i < row_nnodes; i++) {
-            if (row_tree[i].left >= 0) {
-                row_sorted_indices[row_sorted_index] = row_tree[i].left;
-                row_sorted_index++;
-            }
-            if (row_tree[i].right >= 0) {
-                row_sorted_indices[row_sorted_index] = row_tree[i].right;
-                row_sorted_index++;
-            }
-        }
-
-        // Reorder row labels
-        reorder_strings(row_names, row_sorted_indices, num_data_rows);
-        // Reorder heatmap rows
-        reorder_matrix(heatmap_data, row_sorted_indices, num_data_rows, num_data_cols, 'r');
-        // Reorder mask
-        reorder_matrix(mask, row_sorted_indices, num_data_rows, num_data_cols, 'r');
-
-        // Creating TreeNode dict
-
-        //// TODO: May need to remap leaf indices due to sorting heatmap data
-
-        // Add leaves
-        for(int i = 0; i < num_data_rows; ++i) {
-            Leaf  new_leaf;
-            new_leaf.NodeId = i;
-            new_leaf.Height = 0;
-            new_leaf.Indices = {(int)i};
-            new_leaf.Children = {};
-            new_leaf.Label = row_names[i];
-            row_node_dict[i] = new_leaf;
-        }
-
-        // Add other nodes
-        int cur_height = 1;
-        
-        for(int i=0; i<row_nnodes; i++){
-            TreeNode new_tree_node;
-            new_tree_node.NodeId = cur_row_node_id;
-            new_tree_node.Height = cur_height;
-            
-            int left_child_id = row_tree[i].left;
-            
-            int right_child_id = row_tree[i].right;
-
-            // Add all descendents to Children
-            new_tree_node.Children.push_back(row_node_dict[left_child_id]);
-            new_tree_node.Children.push_back(row_node_dict[right_child_id]);
-            vector<TreeNode> left_child_children = row_node_dict[left_child_id].Children;
-            vector<TreeNode> right_child_children = row_node_dict[right_child_id].Children;
-            copy (left_child_children.begin(), left_child_children.end(), back_inserter(new_tree_node.Children));
-            copy (right_child_children.begin(), right_child_children.end(), back_inserter(new_tree_node.Children));
-
-            // Add itself and all descendents to Indices
-            new_tree_node.Indices.push_back(cur_row_node_id);
-            vector<int> left_child_indices = row_node_dict[left_child_id].Indices;
-            vector<int> right_child_indices = row_node_dict[right_child_id].Indices;
-            copy (left_child_indices.begin(), left_child_indices.end(), back_inserter(new_tree_node.Indices));
-            copy (right_child_indices.begin(), right_child_indices.end(), back_inserter(new_tree_node.Indices));
-            
-            row_node_dict[cur_row_node_id] = new_tree_node;
-            cur_row_node_id--;
-            cur_height++;
-        }
-
-        // Free memory used during hierarchical clustering
-        free(row_tree);
-        free(row_weight);
+        cluster_axis(num_data_rows, num_data_cols, distance_function, linkage_function, 1, heatmap_data, mask, row_names, row_node_dict);
     }
 
     mid2 = clock();
+
+    /*
+    cerr << "AFTER" << endl;
+    for (int i = 0; i < num_data_rows; i++)
+    {
+        for (int j = 0; j < num_data_cols; j++)
+        {
+            cerr << heatmap_data[i][j] << ' ';
+        }
+        cerr << endl;
+    }
+    */
 
     /* =========================== Output Generation (Stringifying) =========================== */
 
@@ -506,7 +470,7 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
     output.append("],\ncol_tree:");
 
     if (col_dendro_flag) {
-        output.append(col_node_dict[-col_nnodes].stringify());
+        output.append(col_node_dict[-(num_data_cols-1)].stringify());
     }
     else {
         output.append("None");
@@ -515,7 +479,7 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
     output.append(",\nrow_tree:");
 
     if (row_dendro_flag) {
-        output.append(row_node_dict[-row_nnodes].stringify());
+        output.append(row_node_dict[-(num_data_rows-1)].stringify());
     }
     else {
         output.append("None");
