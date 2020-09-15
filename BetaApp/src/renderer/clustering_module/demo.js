@@ -1,5 +1,13 @@
 const addon = require('./build/Release/cclust');
-const input = "{heatmap_input:[[,col1,col2],[row1,1,2],[row2,3,4]],\ndistance_function:e,\nlinkage_function:a,\naxes:r}";
 
-var output_object =  addon.ccluster(input)
-console.log(`\n ${input} \n is the original input. The output is `, JSON.stringify(output_object));
+// Input
+var matrix = [["","col1","col2"],["row1",1,2],["row2",3,4]];
+var distance_function = "e";
+var linkage_function = "a";
+var axes = "c";
+
+// Output after clustering
+var output_object =  addon.ccluster(matrix, distance_function, linkage_function, axes);
+console.log(`\n The output is `, JSON.stringify(output_object));
+
+

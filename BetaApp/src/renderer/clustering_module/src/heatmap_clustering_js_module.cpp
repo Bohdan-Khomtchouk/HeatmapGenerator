@@ -137,7 +137,6 @@ void reorder_strings(vector<string> &label_names, int* indices, int n)
     for (int i=0; i<n; i++) {
         temp.push_back(label_names.at(indices[i])); 
     }
-  
     // Copy temp[] to col_names[] 
     for (int i=0; i<n; i++) 
     {  
@@ -207,15 +206,6 @@ void cluster_axis(int num_data_rows, int num_data_cols, char distance_func, char
             cerr << ("treecluster routine failed due to insufficient memory") << endl;
             free(weights);
         }
-
-        // Print tree data
-
-        /*
-        cerr << "Node     Item 1   Item 2    Distance\n" << endl;
-        for(int i=0; i<nnodes; i++){
-            cerr << -i-1 << "     " << clust_tree[i].left << "     " << clust_tree[i].right << "     " << clust_tree[i].distance << endl;
-        }
-        */;
 
         // Sort column tree nodes
         int *sorted_indices = new int[num_data_leaves];
@@ -298,17 +288,6 @@ void cluster_axis(int num_data_rows, int num_data_cols, char distance_func, char
             copy (left_child_indices.begin(), left_child_indices.end(), back_inserter(new_tree_node.Indices));
             copy (right_child_indices.begin(), right_child_indices.end(), back_inserter(new_tree_node.Indices));
 
-            /*
-            cerr << "New node: " << cur_node_id << endl;
-            cerr << "children" << endl;
-            for(int j=0; j < new_tree_node.Indices.size(); j++) {
-                cerr << new_tree_node.Indices[j]
-                << endl;
-            }
-            cerr << endl;
-            */
-
-
             node_dict[cur_node_id] = new_tree_node;
             cur_node_id--;
             cur_height++;
@@ -319,88 +298,62 @@ void cluster_axis(int num_data_rows, int num_data_cols, char distance_func, char
 }
 
 napi_value ClusterC(napi_env env, napi_callback_info info) {
-    napi_status status;
-    size_t argc = 1;
-    size_t buf_size = 1048576; ///// might need to increase
-    size_t input_bytes = 0;
-    char input[buf_size];
-    napi_value argv[1];
-    status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
-
-    if (status != napi_ok) {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-    }
-
-    status = napi_get_value_string_utf8(env, argv[0], input, buf_size, &input_bytes);
-
-    if (input_bytes >= buf_size-1) {
-        napi_throw_error(env, NULL, "Input too long");
-    }
-
-    if (status != napi_ok) {
-        napi_throw_error(env, NULL, "Invalid input");
-    }
-
 
     clock_t start, mid, mid2, end;
     start = clock();
 
-    /* =========================== Input Parsing (Destringifying) =========================== */
+    /* =========================== Input Parsing (Extracting napi object properties) =========================== */
 
-    // Args: heatmap_input, distance_function, linkage_function, axes (which dendrograms -- rows/cols/both)) -- parse these args from incoming string
+    napi_status status;
+    size_t argc = 4;
+    napi_value argv[4];
 
-    // Intaking data
-    string heatmap_input;
-    string _distance_function;
-    string _linkage_function;
-    string axes;
+    status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+    }
 
-    stringstream  input_stream(input);
-    string tmp_string = "";
-    int arg_num = 0;
+    napi_value napi_heatmapinput = argv[0];
+    napi_value napi_distfunc = argv[1];
+    napi_value napi_linkfunc = argv[2];
+    napi_value napi_axes = argv[3];
 
-    for(string line; getline(input_stream, line); ) {
-        tmp_string = string(line);
-        if (arg_num == 0) {
-            // front padding: 16, back padding: 2
-            heatmap_input = tmp_string.substr(16, tmp_string.length()-16-2);  // also getting rid of the '[' and ']' at the beginning and the end -- makes parsing later easier
-        }
-        if (arg_num == 1) {
-            // front padding: 18, back padding: 1
-            _distance_function = tmp_string.substr(18, tmp_string.length()-18-1);
-        }
-        if (arg_num == 2) {
-            // front padding: 17, back padding: 1
-            _linkage_function = tmp_string.substr(17, tmp_string.length()-17-1);
-        }
-        if (arg_num == 3) {
-            // front padding: 5, back padding: 1
-            axes = tmp_string.substr(5, tmp_string.length()-5-1);
-        }
-        arg_num += 1;
-    }    
+    // Transforming napi object to C++
+
+    size_t distfunc_input_bytes;
+    napi_get_value_string_utf8(env, napi_distfunc, NULL, 0, &distfunc_input_bytes);
+    char _distance_function[distfunc_input_bytes + 1];
+    napi_get_value_string_utf8(env, napi_distfunc, _distance_function, distfunc_input_bytes + 1, 0);
+    char distance_function = _distance_function[0];
+
+    size_t linkfunc_input_bytes;
+    napi_get_value_string_utf8(env, napi_linkfunc, NULL, 0, &linkfunc_input_bytes);
+    char _linkage_function[linkfunc_input_bytes + 1];
+    napi_get_value_string_utf8(env, napi_linkfunc, _linkage_function, linkfunc_input_bytes + 1, 0);
+    char linkage_function = _linkage_function[0];
+
+    size_t axes_input_bytes;
+    napi_get_value_string_utf8(env, napi_axes, NULL, 0, &axes_input_bytes);
+    char _axes[axes_input_bytes + 1];
+    napi_get_value_string_utf8(env, napi_axes, _axes, axes_input_bytes + 1, 0);
+    string axes(_axes);
 
     // Checking for valid inputs and setting up additional parameters
-    char distance_function = _distance_function[0];
-    char linkage_function = _linkage_function[0];
     string possible_distance_functions = "cauxskeb";
     if (possible_distance_functions.find(distance_function) == string::npos) {
         cerr << endl << "Distance function given is not an option." << endl;
         cerr << "See readme for more info" << endl;
     }
-
     string possible_linkage_functions = "smac";
     if (possible_linkage_functions.find(linkage_function) == string::npos) {
         cerr << endl << "Linkage function given is not an option." << endl;
         cerr << "See readme for more info" << endl;
     }
-
     string possible_dendro_axes = "rcb";
     if (possible_dendro_axes.find(axes) == string::npos) {
         cerr << endl << "Axes given is not an option." << endl;
         cerr << "Should be 'r', 'c', or 'b' (row / col / both)" << endl;
     }
-
     bool col_dendro_flag = false;
     bool row_dendro_flag = false;
     if (axes == "c" || axes == "b") {
@@ -410,79 +363,77 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
         row_dendro_flag = true;
     }
 
-    int _second_bracket_idx = heatmap_input.find('[');
-    int second_bracket_idx = heatmap_input.find('[', _second_bracket_idx+1);
-    int num_data_cols = count(heatmap_input.begin(), heatmap_input.begin()+second_bracket_idx, ',') - 1; // subtract 1 to account for the comma separating rows
-    int num_data_rows = count(heatmap_input.begin(), heatmap_input.end(), '[') - 1; // subtract 1 to account for the label row
-
     // Processing heatmap CSV data
+
+    uint32_t _num_data_rows, _num_data_cols;
+    int num_data_rows, num_data_cols;
+    status = napi_get_array_length(env, napi_heatmapinput, &_num_data_rows);
+    num_data_rows = (int) (_num_data_rows - 1);
+    napi_value temp_heatmap_row_for_count;
+    status = napi_get_element(env, napi_heatmapinput, 0, &temp_heatmap_row_for_count);
+    status = napi_get_array_length(env, temp_heatmap_row_for_count, &_num_data_cols);
+    num_data_cols = (int) (_num_data_cols - 1);
+
     double **heatmap_data = new double*[num_data_rows];
     for(int i = 0; i < num_data_rows; i++) {
         heatmap_data[i] = new double[num_data_cols];
     }
-
     // Allocate array of data's column names
     vector<string> col_names;
     // Allocate array of data's row names
     vector<string> row_names;
-
     // Mask for missing data, needed by the hierarchical clustering algorithm
     int **mask = new int*[num_data_rows];
     for(int i = 0; i < num_data_rows; i++) {
         mask[i] = new int[num_data_cols];
     }
-
+    double _weight;
     float weight;
-    int row_num = 0;
-    int col_num = 0;
 
-    stringstream  data(heatmap_input);
-    string line;
-    while(getline(data,line,']'))
-    {
-        stringstream  lineStream(line);
-        string        cell;
-        
-        col_num = 0;
+    for (int i=0; i < num_data_cols + 1; i++) {
+        napi_value napi_cur_heatmap_row;
+        status = napi_get_element(env, napi_heatmapinput, i, &napi_cur_heatmap_row);
 
-        while(getline(lineStream,cell,','))
-        {
+        for (int j=0; j < num_data_rows + 1; j++) {
+            napi_value napi_cur_heatmap_cell;
+            status = napi_get_element(env, napi_cur_heatmap_row, j, &napi_cur_heatmap_cell);
+
             // corner 0,0 is empty
-            if (row_num == 0 && col_num == 0) {
-                col_num += 1;
+            if (i == 0 && j == 0) {
                 continue;
             }
             // column label
-            else if (row_num == 0){
-                col_names.push_back(string(cell));
-            }
-            // skip the first comma ("first column"), since it's just the comma separating rows
-            else if (col_num == 0){
-                col_num += 1;
-                continue;
+            else if (i == 0){
+                size_t label_input_bytes;
+                napi_get_value_string_utf8(env, napi_cur_heatmap_cell, NULL, 0, &label_input_bytes);
+                char _col_label[label_input_bytes + 1];
+                napi_get_value_string_utf8(env, napi_cur_heatmap_cell, _col_label, label_input_bytes + 1, 0);
+                string col_label(_col_label);
+                col_names.push_back(col_label);
             }
             // row label
-            else if (col_num == 1){
-                string _row_label = string(cell);
-                string row_label(_row_label.begin()+1, _row_label.end()); // to get rid of the extra '[' at the front
+            else if (j == 0){
+                size_t label_input_bytes;
+                napi_get_value_string_utf8(env, napi_cur_heatmap_cell, NULL, 0, &label_input_bytes);
+                char _row_label[label_input_bytes + 1];
+                napi_get_value_string_utf8(env, napi_cur_heatmap_cell, _row_label, label_input_bytes + 1, 0);
+                string row_label(_row_label);
                 row_names.push_back(row_label);
             }
             // heatmap data cell
             else {
-                weight = stof(cell);
+                status = napi_get_value_double(env, napi_cur_heatmap_cell, &_weight);
+                weight = (float) _weight;
+                heatmap_data[i-1][j-1] = weight;
 
-                heatmap_data[row_num-1][col_num-2] = weight;
                 if (!weight) {
-                    mask[row_num-1][col_num-2] = 0;
+                    mask[i-1][j-1] = 0;
                 }
                 else {
-                    mask[row_num-1][col_num-2] = 1;
+                    mask[i-1][j-1] = 1;
                 }
             }
-
-            col_num += 1;
         }
-        row_num += 1;
     }
 
     mid = clock();
@@ -499,18 +450,6 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
     }
 
     mid2 = clock();
-
-    /*
-    cerr << "AFTER" << endl;
-    for (int i = 0; i < num_data_rows; i++)
-    {
-        for (int j = 0; j < num_data_cols; j++)
-        {
-            cerr << heatmap_data[i][j] << ' ';
-        }
-        cerr << endl;
-    }
-    */
 
     /* =========================== Output Generation (Wrapping Napi Object) =========================== */                        
 
@@ -603,13 +542,13 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
     double time_output = double(end-mid2)/double(CLOCKS_PER_SEC);
     double time_taken_overall = double(end-start)/double(CLOCKS_PER_SEC);
 
-    cerr << "Input destringifying time : " << fixed 
+    cerr << "Input decoding time (NAPI objects to C++): " << fixed 
          << time_input << setprecision(5); 
     cerr << " sec " << endl; 
     cerr << "Clustering time : " << fixed 
          << time_clustering << setprecision(5); 
     cerr << " sec " << endl; 
-    cerr << "Output stringifying time : " << fixed 
+    cerr << "Output encoding time (C++ to NAPI object): " << fixed 
          << time_output << setprecision(5); 
     cerr << " sec " << endl; 
     cerr << "Overall time taken by program is : " << fixed 
