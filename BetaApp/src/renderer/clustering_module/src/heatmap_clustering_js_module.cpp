@@ -135,12 +135,13 @@ void reorder_strings(vector<string> &label_names, int* indices, int n)
     // indices's elements are the labels/indices of label_names
     // indices's positions (element index) are the new positions (element index)
     for (int i=0; i<n; i++) {
-        temp.push_back(label_names.at(indices[i])); 
+        // temp.push_back(label_names.at(indices[i])); 
     }
+
     // Copy temp[] to col_names[] 
     for (int i=0; i<n; i++) 
     {  
-       label_names.at(i) = temp.at(i); 
+       //label_names.at(i) = temp.at(i); 
     } 
 } 
 
@@ -148,7 +149,7 @@ template <typename T>
 void reorder_matrix(T** &matrix, int* index, int num_data_rows, int num_data_cols, char axis) 
 { 
     if (axis != 0 && axis != 1) {
-        cerr << endl << "Axis value must be 0 (column) or 1 (row)" << endl;
+        cerr << endl << "Axis value must be 0 (row) or 1 (columnn)" << endl;
         return;
     }
 
@@ -158,10 +159,10 @@ void reorder_matrix(T** &matrix, int* index, int num_data_rows, int num_data_col
         temp[i] = new double[num_data_cols];
         for (int j=0; j< num_data_cols; j++) 
         {
-            if (axis == 1) {
+            if (axis == 0) { // row
                 temp[i][j] = matrix[index[i]][j]; 
             }
-            else {
+            else { // col
                 temp[i][j] = matrix[i][index[j]]; 
             }
         }
@@ -186,13 +187,13 @@ void reorder_matrix(T** &matrix, int* index, int num_data_rows, int num_data_col
 void cluster_axis(int num_data_rows, int num_data_cols, char distance_func, char linkage_func, int axis, double** &heatmap_data, int** &mask, vector<string> &label_names, map<int, TreeNode> &node_dict){
     
         int num_data_leaves, nnodes;
-        if (axis == 0){
-            num_data_leaves = num_data_cols;
-            nnodes = num_data_cols - 1;
-        }
-        else { // axis == 1
+        if (axis == 0){ // rows
             num_data_leaves = num_data_rows;
             nnodes = num_data_rows - 1;
+        }
+        else { // cols
+            num_data_leaves = num_data_cols;
+            nnodes = num_data_cols - 1;
         }
 
         // Get dendrogram tree for axis 
@@ -238,7 +239,6 @@ void cluster_axis(int num_data_rows, int num_data_cols, char distance_func, char
         for (int i = 0; i < num_data_leaves; i++) {
             new_leaf_id[sorted_indices[i]] = i;
         }
-
         // Add leaves
         for(int i = 0; i < num_data_leaves; ++i) {
             TreeNode new_leaf;
@@ -247,12 +247,12 @@ void cluster_axis(int num_data_rows, int num_data_cols, char distance_func, char
             new_leaf.Indices = {(int)i};
             new_leaf.Children = {};
             new_leaf.Label = label_names[i];
-            if (axis == 0) {
+            if (axis == 0) { // rows
                 for (int j=0; j < num_data_cols; j++) {
                     new_leaf.Values.push_back(heatmap_data[i][j]);
                 }
             }
-            else {
+            else { // cols
                 for (int j=0; j < num_data_rows; j++) {
                     new_leaf.Values.push_back(heatmap_data[j][i]);
                 }
@@ -302,7 +302,7 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
     clock_t start, mid, mid2, end;
     start = clock();
 
-    /* =========================== Input Parsing (Extracting napi object properties) =========================== */
+    /* =========================== Input Parsing (Extracting napi object parameters) =========================== */
 
     napi_status status;
     size_t argc = 4;
@@ -390,11 +390,11 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
     double _weight;
     float weight;
 
-    for (int i=0; i < num_data_cols + 1; i++) {
+    for (int i=0; i < num_data_rows + 1; i++) {
         napi_value napi_cur_heatmap_row;
         status = napi_get_element(env, napi_heatmapinput, i, &napi_cur_heatmap_row);
 
-        for (int j=0; j < num_data_rows + 1; j++) {
+        for (int j=0; j < num_data_cols + 1; j++) {
             napi_value napi_cur_heatmap_cell;
             status = napi_get_element(env, napi_cur_heatmap_row, j, &napi_cur_heatmap_cell);
 
@@ -442,10 +442,10 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
     map<int, TreeNode> col_node_dict;
     map<int, TreeNode> row_node_dict;
 
-    if (col_dendro_flag) {
+    if (row_dendro_flag) {
         cluster_axis(num_data_rows, num_data_cols, distance_function, linkage_function, 0, heatmap_data, mask, col_names, col_node_dict);
     }
-    if (row_dendro_flag) {
+    if (col_dendro_flag) {
         cluster_axis(num_data_rows, num_data_cols, distance_function, linkage_function, 1, heatmap_data, mask, row_names, row_node_dict);
     }
 
