@@ -314,7 +314,7 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
         napi_throw_error(env, NULL, "Failed to parse arguments");
     }
 
-    napi_value napi_heatmapinput = argv[0];
+    napi_value napi_heatmapcsvpath = argv[0];
     napi_value napi_distfunc = argv[1];
     napi_value napi_linkfunc = argv[2];
     napi_value napi_axes = argv[3];
@@ -366,75 +366,88 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
 
     // Processing heatmap CSV data
 
-    uint32_t _num_data_rows, _num_data_cols;
-    int num_data_rows, num_data_cols;
-    status = napi_get_array_length(env, napi_heatmapinput, &_num_data_rows);
-    num_data_rows = (int) (_num_data_rows - 1);
-    napi_value temp_heatmap_row_for_count;
-    status = napi_get_element(env, napi_heatmapinput, 0, &temp_heatmap_row_for_count);
-    status = napi_get_array_length(env, temp_heatmap_row_for_count, &_num_data_cols);
-    num_data_cols = (int) (_num_data_cols - 1);
+    size_t heatmapcsvpath_bytes;
+    napi_get_value_string_utf8(env, napi_heatmapcsvpath, NULL, 0, &heatmapcsvpath_bytes);
+    char csv_path[heatmapcsvpath_bytes + 1];
+    napi_get_value_string_utf8(env, napi_heatmapcsvpath, csv_path, heatmapcsvpath_bytes + 1, 0);
+
+    int num_data_rows = -1;
+    int num_data_cols = -1;
+    std::ifstream  datatmp(csv_path);
+    std::string line;
+    while(std::getline(datatmp,line))
+    {
+        std::stringstream  lineStream(line);
+        std::string        cell;
+        if (num_data_rows == -1) {
+            while(std::getline(lineStream,cell,','))
+            {
+                    num_data_cols += 1;
+            }
+        }
+        num_data_rows += 1;
+    }
 
     double **heatmap_data = new double*[num_data_rows];
     for(int i = 0; i < num_data_rows; i++) {
         heatmap_data[i] = new double[num_data_cols];
     }
+
     // Allocate array of data's column names
-    vector<string> col_names;
+    std::vector<std::string> col_names;
     // Allocate array of data's row names
-    vector<string> row_names;
+    std::vector<std::string> row_names;
+
     // Mask for missing data, needed by the hierarchical clustering algorithm
     int **mask = new int*[num_data_rows];
     for(int i = 0; i < num_data_rows; i++) {
         mask[i] = new int[num_data_cols];
     }
-    double _weight;
+
+    std::ifstream ifile;
+    ifile.open(csv_path);
+    if(!ifile) {
+        std::cerr << "CSV file does not exist at given filepath" << std::endl;
+    }
+
     float weight;
-
-    for (int i=0; i < num_data_rows + 1; i++) {
-        napi_value napi_cur_heatmap_row;
-        status = napi_get_element(env, napi_heatmapinput, i, &napi_cur_heatmap_row);
-
-        for (int j=0; j < num_data_cols + 1; j++) {
-            napi_value napi_cur_heatmap_cell;
-            status = napi_get_element(env, napi_cur_heatmap_row, j, &napi_cur_heatmap_cell);
-
+    unsigned row_num = 0;
+    unsigned col_num = 0;
+    std::ifstream  data(csv_path);
+    while(std::getline(data,line))
+    {
+        std::stringstream  lineStream(line);
+        std::string        cell;
+        col_num = 0;
+        while(std::getline(lineStream,cell,','))
+        {
             // corner 0,0 is empty
-            if (i == 0 && j == 0) {
+            if (row_num == 0 && col_num == 0) {
+                col_num += 1;
                 continue;
             }
             // column label
-            else if (i == 0){
-                size_t label_input_bytes;
-                napi_get_value_string_utf8(env, napi_cur_heatmap_cell, NULL, 0, &label_input_bytes);
-                char _col_label[label_input_bytes + 1];
-                napi_get_value_string_utf8(env, napi_cur_heatmap_cell, _col_label, label_input_bytes + 1, 0);
-                string col_label(_col_label);
-                col_names.push_back(col_label);
+            else if (row_num == 0){
+                col_names.push_back(std::string(cell));
             }
             // row label
-            else if (j == 0){
-                size_t label_input_bytes;
-                napi_get_value_string_utf8(env, napi_cur_heatmap_cell, NULL, 0, &label_input_bytes);
-                char _row_label[label_input_bytes + 1];
-                napi_get_value_string_utf8(env, napi_cur_heatmap_cell, _row_label, label_input_bytes + 1, 0);
-                string row_label(_row_label);
-                row_names.push_back(row_label);
+            else if (col_num == 0){
+                row_names.push_back(std::string(cell));
             }
             // heatmap data cell
             else {
-                status = napi_get_value_double(env, napi_cur_heatmap_cell, &_weight);
-                weight = (float) _weight;
-                heatmap_data[i-1][j-1] = weight;
-
+                weight = std::stof(cell);
+                heatmap_data[row_num-1][col_num-1] = weight;
                 if (!weight) {
-                    mask[i-1][j-1] = 0;
+                    mask[row_num-1][col_num-1] = 0;
                 }
                 else {
-                    mask[i-1][j-1] = 1;
+                    mask[row_num-1][col_num-1] = 1;
                 }
             }
+            col_num += 1;
         }
+        row_num += 1;
     }
 
     mid = clock();
@@ -491,7 +504,6 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
         }
         status = napi_set_element(env, napi_matrix_val, i, napi_cur_matrix_row);
     }
-
 
     napi_value napi_rowlabels_valobject;
     status = napi_create_object(env, &napi_rowlabels_valobject);
