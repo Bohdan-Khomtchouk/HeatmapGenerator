@@ -16,12 +16,14 @@ using namespace std;
 
 class TreeNode {
     public:
+        // Properties for all TreeNodes
         int NodeId;
+        string Label;
         int Height;
         vector<int> Indices;
         vector<TreeNode*> Children;
 
-        string Label;
+        // Properties that are specific to TreeNodes that are leaves (otherwise uninitialized)
         vector<double> Values;
 
         virtual ~TreeNode() {}
@@ -135,13 +137,13 @@ void reorder_strings(vector<string> &label_names, int* indices, int n)
     // indices's elements are the labels/indices of label_names
     // indices's positions (element index) are the new positions (element index)
     for (int i=0; i<n; i++) {
-        // temp.push_back(label_names.at(indices[i])); 
+        temp.push_back(label_names.at(indices[i])); 
     }
 
     // Copy temp[] to col_names[] 
     for (int i=0; i<n; i++) 
     {  
-       //label_names.at(i) = temp.at(i); 
+       label_names.at(i) = temp.at(i); 
     } 
 } 
 
@@ -172,7 +174,6 @@ void reorder_matrix(T** &matrix, int* index, int num_data_rows, int num_data_col
     for (int i=0; i<num_data_rows; i++) {
         for (int j=0; j< num_data_cols; j++) {
             matrix[i][j] = temp[i][j]; 
-            // index[i] = i;
         }
     }
 
@@ -443,10 +444,10 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
     map<int, TreeNode> row_node_dict;
 
     if (row_dendro_flag) {
-        cluster_axis(num_data_rows, num_data_cols, distance_function, linkage_function, 0, heatmap_data, mask, col_names, col_node_dict);
+        cluster_axis(num_data_rows, num_data_cols, distance_function, linkage_function, 0, heatmap_data, mask, row_names, row_node_dict);
     }
     if (col_dendro_flag) {
-        cluster_axis(num_data_rows, num_data_cols, distance_function, linkage_function, 1, heatmap_data, mask, row_names, row_node_dict);
+        cluster_axis(num_data_rows, num_data_cols, distance_function, linkage_function, 1, heatmap_data, mask, col_names, col_node_dict);
     }
 
     mid2 = clock();
