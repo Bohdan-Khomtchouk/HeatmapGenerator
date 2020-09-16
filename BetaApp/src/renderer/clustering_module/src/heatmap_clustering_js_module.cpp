@@ -492,21 +492,34 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
         status = napi_set_element(env, napi_matrix_val, i, napi_cur_matrix_row);
     }
 
-    napi_value napi_rowlabels_val;
-    status = napi_create_array(env, &napi_rowlabels_val);
+
+    napi_value napi_rowlabels_valobject;
+    status = napi_create_object(env, &napi_rowlabels_valobject);
+    current_napi_key_name = "data";
+    napi_value napi_rowlabels_valobject_key;
+    status = napi_create_string_utf8(env, current_napi_key_name.c_str(), current_napi_key_name.length(), &napi_rowlabels_valobject_key);
+    napi_value napi_rowlabels_valobject_val;
+    status = napi_create_array(env, &napi_rowlabels_valobject_val);
     for (int i = 0; i < num_data_rows; i++) {
         napi_value cur_row_name;
         status = napi_create_string_utf8(env, row_names[i].c_str(), row_names[i].length(), &cur_row_name);
-        status = napi_set_element(env, napi_rowlabels_val, i, cur_row_name);
+        status = napi_set_element(env, napi_rowlabels_valobject_val, i, cur_row_name);
     }
+    status = napi_set_property(env, napi_rowlabels_valobject, napi_rowlabels_valobject_key, napi_rowlabels_valobject_val);
 
-    napi_value napi_collabels_val;
-    status = napi_create_array(env, &napi_collabels_val);
+    napi_value napi_collabels_valobject;
+    status = napi_create_object(env, &napi_collabels_valobject);
+    current_napi_key_name = "data";
+    napi_value napi_collabels_valobject_key;
+    status = napi_create_string_utf8(env, current_napi_key_name.c_str(), current_napi_key_name.length(), &napi_collabels_valobject_key);
+    napi_value napi_collabels_valobject_val;
+    status = napi_create_array(env, &napi_collabels_valobject_val);
     for (int i = 0; i < num_data_cols; i++) {
         napi_value cur_col_name;
         status = napi_create_string_utf8(env, col_names[i].c_str(), col_names[i].length(), &cur_col_name);
-        status = napi_set_element(env, napi_collabels_val, i, cur_col_name);
+        status = napi_set_element(env, napi_collabels_valobject_val, i, cur_col_name);
     }
+    status = napi_set_property(env, napi_collabels_valobject, napi_collabels_valobject_key, napi_collabels_valobject_val);
 
     napi_value napi_rowtree_val;
     if (row_dendro_flag) {
@@ -526,8 +539,8 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
 
     // Setting keys and values for return
     status = napi_set_property(env, return_napi_object, napi_matrix_key, napi_matrix_val);
-    status = napi_set_property(env, return_napi_object, napi_rowlabels_key, napi_rowlabels_val);
-    status = napi_set_property(env, return_napi_object, napi_collabels_key, napi_collabels_val);
+    status = napi_set_property(env, return_napi_object, napi_rowlabels_key, napi_rowlabels_valobject);
+    status = napi_set_property(env, return_napi_object, napi_collabels_key, napi_collabels_valobject);
     status = napi_set_property(env, return_napi_object, napi_rowtree_key, napi_rowtree_val);
     status = napi_set_property(env, return_napi_object, napi_coltree_key, napi_coltree_val);
 
