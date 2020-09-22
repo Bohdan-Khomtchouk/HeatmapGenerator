@@ -26,3 +26,5 @@ vue/BetaApp/dist/web/.gitkeep
 vue/BetaApp/src/renderer/.Rhistory
 
 vue/BetaApp/src/extraResources/.Rhistory
+
+BetaApp/src/renderer/clustering_module/demo.js

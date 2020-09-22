@@ -9,20 +9,23 @@ export default class Heatmap {
    * @param {Dictionary} setup title, rowAxis, colAxis, clustering
    */
   constructor (data, setup) {
-    this.data = {} // Purely sourced from the data file
-    this.settings = {} // Configurations known beforehand (still mutable!)
-    this.appearance = {} // Can be modified after the heatmap is generated
+    if (setup) {
+      this.data = {} // Purely sourced from the data file
+      this.settings = {} // Configurations known beforehand (still mutable!)
+      this.appearance = {} // Can be modified after the heatmap is generated
 
-    this.data = data
-    this.settings = setup
+      this.data = data
+      this.settings = setup
 
-    this.setDefaults()
+      this.setDefaults()
+    } else {
+      Object.assign(this, JSON.parse(data))
+    }
   }
   /**
    * Configures default appearance settings, can be changed after heatmap is generated.
    */
   setDefaults () {
-    // Heatmap
     this.appearance.heatmap = {}
     this.appearance.heatmap.cellSize = 50
     this.appearance.heatmap.columns = this.data.matrix[0].length
@@ -116,19 +119,19 @@ export default class Heatmap {
     var size = [] // Row Size, Col Size
     var padding = [] // Row R, Col T (only between dendrogram and heatmap)
     switch (this.settings.clustering.type) {
-      case 'none':
+      case 'n':
         size = [0, 0]
         padding = [0, 0]
         break
-      case 'row':
+      case 'r':
         size = [100, 0]
         padding = [10, 0]
         break
-      case 'col':
+      case 'c':
         size = [0, 50]
         padding = [0, 10]
         break
-      case 'both':
+      case 'b':
         size = [100, 50]
         padding = [10, 10]
         break
@@ -226,20 +229,42 @@ export default class Heatmap {
   /**
    * Updates all necessary properties for a Heatmap object and recalculates spacing data.
    * @param {Object} comp Direction and name of component
-   * @param {String} prop Name of property key to change
-   * @param {Number} change Name of new value
+   * @param {String} [prop] Name of property key to change
+   * @param {Number} [change] Name of new value
+   * @param {Object} comp Alternative component to update (diff from starting comp)
+   * If both, can not start from asymmetric component (title)
+   *
    */
-  updateAppearance (comp, prop, change, callback) {
+  updateAppearance (comp, prop, change, callback, altComp) {
     var _ = require('lodash')
-    _.set(this.appearance, prop, change)
-    var index = this.components[comp.direction].map[comp.name]
-    var subComps = this.components[comp.direction].dictionary[comp.name]
-    let tot = 0
-    subComps.forEach(subComp => { tot += _.get(this.appearance, subComp) })
-    this.components[comp.direction].values[index] = tot
-    callback()
+    prop = prop || null
+    change = change || null
+    altComp = altComp || null
+    if (prop !== null && change !== null) _.set(this.appearance, prop, change) // only manipulate properties if given
+    if (comp.direction === 'both') {
+      // Calculate it both ways, but only return the horizontal
+      if (altComp) {
+        this.recalculateComponentSize(altComp.direction, altComp.name)
+        callback(null, this.recalculateComponentSize('horizontal', comp.name))
+      } else {
+        this.recalculateComponentSize('vertical', comp.name)
+        callback(null, this.recalculateComponentSize('horizontal', comp.name))
+      }
+    } else {
+      callback(null, this.recalculateComponentSize(comp.direction, comp.name))
+    }
   }
 
+  recalculateComponentSize (direction, name) {
+    var _ = require('lodash')
+    var self = this
+    var index = this.components[direction].map[name]
+    var subComps = this.components[direction].dictionary[name]
+    var tot = 0
+    subComps.forEach(subComp => { tot += _.get(self.appearance, subComp) })
+    this.components[direction].values[index] = tot
+    return index
+  }
   /**
    * Get pixel space occupied
    * @param {String} direction Direction of spacing
