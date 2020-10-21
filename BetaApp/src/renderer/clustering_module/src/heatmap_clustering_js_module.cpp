@@ -40,7 +40,7 @@ class TreeNode {
             string current_napi_key_name;
             current_napi_key_name = "name";
             napi_value napi_name_key;
-            status = napi_create_string_utf8(env, current_napi_key_name.c_str(), current_napi_key_name.length(), &napi_name_key);       
+            status = napi_create_string_utf8(env, current_napi_key_name.c_str(), current_napi_key_name.length(), &napi_name_key);
             current_napi_key_name = "height";
             napi_value napi_height_key;
             status = napi_create_string_utf8(env, current_napi_key_name.c_str(), current_napi_key_name.length(), &napi_height_key);
@@ -54,7 +54,7 @@ class TreeNode {
             // Creating napi values
             napi_value napi_name_val;
             status = napi_create_string_utf8(env, Label.c_str(), Label.length(), &napi_name_val);
-            
+
             napi_value napi_height_val;
             status = napi_create_int64(env, Height, &napi_height_val);
             napi_value napi_indices_val;
@@ -68,14 +68,14 @@ class TreeNode {
             status = napi_create_array(env, &napi_children_val);
             for (unsigned i = 0; i < Children.size(); i++) {
                 napi_value cur_child;
-                status = Children.at(i)->napify(env, &cur_child);       
+                status = Children.at(i)->napify(env, &cur_child);
                 status = napi_set_element(env, napi_children_val, i, cur_child);
             }
 
             // Setting keys and values for return
-            status = napi_set_property(env, *napi_tree_result, napi_name_key, napi_name_val);         
+            status = napi_set_property(env, *napi_tree_result, napi_name_key, napi_name_val);
             status = napi_set_property(env, *napi_tree_result, napi_height_key, napi_height_val);
-            status = napi_set_property(env, *napi_tree_result, napi_indices_key, napi_indices_val);            
+            status = napi_set_property(env, *napi_tree_result, napi_indices_key, napi_indices_val);
             status = napi_set_property(env, *napi_tree_result, napi_children_key, napi_children_val);
 
             if (NodeId >= 0) {
@@ -118,7 +118,7 @@ class TreeNode {
                     stream << Indices.at(i) << ",";
                 }
             }
-            
+
             stream << "],";
             stream << "[" << children << ",";
 
@@ -129,27 +129,61 @@ class TreeNode {
 
             return output;
         }
+
 };
 
-void reorder_strings(vector<string> &label_names, int* indices, int n) 
-{ 
-    vector<string> temp; 
+std::istream& safeGetline(std::istream& is, std::string& t)
+{
+    t.clear();
+
+    // The characters in the stream are read one-by-one using a std::streambuf.
+    // That is faster than reading them one-by-one using the std::istream.
+    // Code that uses streambuf this way must be guarded by a sentry object.
+    // The sentry object performs various tasks,
+    // such as thread synchronization and updating the stream state.
+
+    std::istream::sentry se(is, true);
+    std::streambuf* sb = is.rdbuf();
+
+    for(;;) {
+        int c = sb->sbumpc();
+        switch (c) {
+        case '\n':
+            return is;
+        case '\r':
+            if(sb->sgetc() == '\n')
+                sb->sbumpc();
+            return is;
+        case std::streambuf::traits_type::eof():
+            // Also handle the case when the last line has no line ending
+            if(t.empty())
+                is.setstate(std::ios::eofbit);
+            return is;
+        default:
+            t += (char)c;
+        }
+    }
+}
+
+void reorder_strings(vector<string> &label_names, int* indices, int n)
+{
+    vector<string> temp;
     // indices's elements are the labels/indices of label_names
     // indices's positions (element index) are the new positions (element index)
     for (int i=0; i<n; i++) {
-        temp.push_back(label_names.at(indices[i])); 
+        temp.push_back(label_names.at(indices[i]));
     }
 
-    // Copy temp[] to col_names[] 
-    for (int i=0; i<n; i++) 
-    {  
-       label_names.at(i) = temp.at(i); 
-    } 
-} 
+    // Copy temp[] to col_names[]
+    for (int i=0; i<n; i++)
+    {
+       label_names.at(i) = temp.at(i);
+    }
+}
 
 template <typename T>
-void reorder_matrix(T** &matrix, int* index, int num_data_rows, int num_data_cols, char axis) 
-{ 
+void reorder_matrix(T** &matrix, int* index, int num_data_rows, int num_data_cols, char axis)
+{
     if (axis != 0 && axis != 1) {
         cerr << endl << "Axis value must be 0 (row) or 1 (columnn)" << endl;
         return;
@@ -159,21 +193,21 @@ void reorder_matrix(T** &matrix, int* index, int num_data_rows, int num_data_col
     for (int i = 0; i < num_data_rows; i++ )
     {
         temp[i] = new double[num_data_cols];
-        for (int j=0; j< num_data_cols; j++) 
+        for (int j=0; j< num_data_cols; j++)
         {
             if (axis == 0) { // row
-                temp[i][j] = matrix[index[i]][j]; 
+                temp[i][j] = matrix[index[i]][j];
             }
             else { // col
-                temp[i][j] = matrix[i][index[j]]; 
+                temp[i][j] = matrix[i][index[j]];
             }
         }
     }
-  
-    // Copy temp[] to col_names[] 
+
+    // Copy temp[] to col_names[]
     for (int i=0; i<num_data_rows; i++) {
         for (int j=0; j< num_data_cols; j++) {
-            matrix[i][j] = temp[i][j]; 
+            matrix[i][j] = temp[i][j];
         }
     }
 
@@ -183,10 +217,10 @@ void reorder_matrix(T** &matrix, int* index, int num_data_rows, int num_data_col
     }
     free(temp);
 
-} 
+}
 
 void cluster_axis(int num_data_rows, int num_data_cols, char distance_func, char linkage_func, int axis, double** &heatmap_data, int** &mask, vector<string> &label_names, map<int, TreeNode> &node_dict){
-    
+
         int num_data_leaves, nnodes;
         if (axis == 0){ // rows
             num_data_leaves = num_data_rows;
@@ -197,7 +231,7 @@ void cluster_axis(int num_data_rows, int num_data_cols, char distance_func, char
             nnodes = num_data_cols - 1;
         }
 
-        // Get dendrogram tree for axis 
+        // Get dendrogram tree for axis
         double *weights = new double[num_data_leaves];
         for(int i = 0; i < num_data_leaves; ++i) {
             weights[i] = 1.0;
@@ -263,13 +297,13 @@ void cluster_axis(int num_data_rows, int num_data_cols, char distance_func, char
 
         // Add other nodes
         int cur_height = 1;
-        
+
         for(int i=0; i<nnodes; i++){
             TreeNode new_tree_node;
             new_tree_node.Label = "Node " + to_string(abs(cur_node_id));
             new_tree_node.NodeId = cur_node_id;
             new_tree_node.Height = cur_height;
-            
+
             int left_child_id = clust_tree[i].left;
             int right_child_id = clust_tree[i].right;
             if (left_child_id >= 0) {
@@ -373,9 +407,11 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
 
     int num_data_rows = -1;
     int num_data_cols = -1;
+
+
     std::ifstream  datatmp(csv_path);
     std::string line;
-    while(std::getline(datatmp,line))
+    while(!safeGetline(datatmp,line).eof())
     {
         std::stringstream  lineStream(line);
         std::string        cell;
@@ -414,7 +450,7 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
     unsigned row_num = 0;
     unsigned col_num = 0;
     std::ifstream  data(csv_path);
-    while(std::getline(data,line))
+    while(!safeGetline(data,line).eof())
     {
         std::stringstream  lineStream(line);
         std::string        cell;
@@ -465,7 +501,7 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
 
     mid2 = clock();
 
-    /* =========================== Output Generation (Wrapping Napi Object) =========================== */                        
+    /* =========================== Output Generation (Wrapping Napi Object) =========================== */
 
     napi_value return_napi_object;
     status = napi_create_object(env, &return_napi_object);
@@ -568,18 +604,18 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
     double time_output = double(end-mid2)/double(CLOCKS_PER_SEC);
     double time_taken_overall = double(end-start)/double(CLOCKS_PER_SEC);
 
-    cerr << "Input decoding time (NAPI objects to C++): " << fixed 
-         << time_input << setprecision(5); 
-    cerr << " sec " << endl; 
-    cerr << "Clustering time : " << fixed 
-         << time_clustering << setprecision(5); 
-    cerr << " sec " << endl; 
-    cerr << "Output encoding time (C++ to NAPI object): " << fixed 
-         << time_output << setprecision(5); 
-    cerr << " sec " << endl; 
-    cerr << "Overall time taken by program is : " << fixed 
-         << time_taken_overall << setprecision(5); 
-    cerr << " sec " << endl; 
+    cerr << "Input decoding time (NAPI objects to C++): " << fixed
+         << time_input << setprecision(5);
+    cerr << " sec " << endl;
+    cerr << "Clustering time : " << fixed
+         << time_clustering << setprecision(5);
+    cerr << " sec " << endl;
+    cerr << "Output encoding time (C++ to NAPI object): " << fixed
+         << time_output << setprecision(5);
+    cerr << " sec " << endl;
+    cerr << "Overall time taken by program is : " << fixed
+         << time_taken_overall << setprecision(5);
+    cerr << " sec " << endl;
 
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "Unable to create return value");

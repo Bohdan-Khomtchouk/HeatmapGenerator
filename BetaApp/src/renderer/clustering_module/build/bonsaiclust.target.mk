@@ -48,13 +48,13 @@ CFLAGS_OBJC_Debug :=
 CFLAGS_OBJCC_Debug :=
 
 INCS_Debug := \
-	-I/Users/erica/Library/Caches/node-gyp/12.18.2/include/node \
-	-I/Users/erica/Library/Caches/node-gyp/12.18.2/src \
-	-I/Users/erica/Library/Caches/node-gyp/12.18.2/deps/openssl/config \
-	-I/Users/erica/Library/Caches/node-gyp/12.18.2/deps/openssl/openssl/include \
-	-I/Users/erica/Library/Caches/node-gyp/12.18.2/deps/uv/include \
-	-I/Users/erica/Library/Caches/node-gyp/12.18.2/deps/zlib \
-	-I/Users/erica/Library/Caches/node-gyp/12.18.2/deps/v8/include
+	-I/Users/ali1/Library/Caches/node-gyp/12.19.0/include/node \
+	-I/Users/ali1/Library/Caches/node-gyp/12.19.0/src \
+	-I/Users/ali1/Library/Caches/node-gyp/12.19.0/deps/openssl/config \
+	-I/Users/ali1/Library/Caches/node-gyp/12.19.0/deps/openssl/openssl/include \
+	-I/Users/ali1/Library/Caches/node-gyp/12.19.0/deps/uv/include \
+	-I/Users/ali1/Library/Caches/node-gyp/12.19.0/deps/zlib \
+	-I/Users/ali1/Library/Caches/node-gyp/12.19.0/deps/v8/include
 
 DEFS_Release := \
 	'-DNODE_GYP_MODULE_NAME=bonsaiclust' \
@@ -99,13 +99,13 @@ CFLAGS_OBJC_Release :=
 CFLAGS_OBJCC_Release :=
 
 INCS_Release := \
-	-I/Users/erica/Library/Caches/node-gyp/12.18.2/include/node \
-	-I/Users/erica/Library/Caches/node-gyp/12.18.2/src \
-	-I/Users/erica/Library/Caches/node-gyp/12.18.2/deps/openssl/config \
-	-I/Users/erica/Library/Caches/node-gyp/12.18.2/deps/openssl/openssl/include \
-	-I/Users/erica/Library/Caches/node-gyp/12.18.2/deps/uv/include \
-	-I/Users/erica/Library/Caches/node-gyp/12.18.2/deps/zlib \
-	-I/Users/erica/Library/Caches/node-gyp/12.18.2/deps/v8/include
+	-I/Users/ali1/Library/Caches/node-gyp/12.19.0/include/node \
+	-I/Users/ali1/Library/Caches/node-gyp/12.19.0/src \
+	-I/Users/ali1/Library/Caches/node-gyp/12.19.0/deps/openssl/config \
+	-I/Users/ali1/Library/Caches/node-gyp/12.19.0/deps/openssl/openssl/include \
+	-I/Users/ali1/Library/Caches/node-gyp/12.19.0/deps/uv/include \
+	-I/Users/ali1/Library/Caches/node-gyp/12.19.0/deps/zlib \
+	-I/Users/ali1/Library/Caches/node-gyp/12.19.0/deps/v8/include
 
 OBJS := \
 	$(obj).target/$(TARGET)/src/cluster.o

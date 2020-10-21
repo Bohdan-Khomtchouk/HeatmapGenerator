@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        HeatmapGenerator is a cross-platform GUI written in JS using Electron, Vue, and Plotly
+        HeatmapGenerator is a cross-platform GUI written in JS using Electron, Vue, and D3.js
         to streamline the creation of customized gene expression heatmaps from RNA-seq and microarray data in medical research.
         HeatmapGenerator can also be used to make heatmaps in a variety of other non-medical fields.
         HeatmapGenerator is peer-reviewed published software.

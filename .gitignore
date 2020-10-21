@@ -28,3 +28,19 @@ vue/BetaApp/src/renderer/.Rhistory
 vue/BetaApp/src/extraResources/.Rhistory
 
 BetaApp/src/renderer/clustering_module/demo.js
+BetaApp/src/renderer/clustering_module/build/bonsaiclust.target.mk
+BetaApp/src/renderer/clustering_module/build/bonsaiclust.target.mk
+BetaApp/src/renderer/clustering_module/build/bonsaiclust.target.mk
+*.mk
+BetaApp/src/renderer/clustering_module/build/Release/bonsaiclust.a
+BetaApp/src/renderer/clustering_module/build/Makefile
+*.d
+*.mk
+*.gypi
+*.a
+*.node
+*.o
+*.gypi
+BetaApp/src/renderer/clustering_module/build/Makefile
+*.d
+*.a

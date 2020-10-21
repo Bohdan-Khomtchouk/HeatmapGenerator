@@ -25,7 +25,8 @@ function createWindow () {
     width: 1000,
     webPreferences: {
       nodeIntegration: true,
-      nodeIntegrationInWorker: true
+      nodeIntegrationInWorker: true,
+      enableRemoteModule: true
       // , devTools: false
     },
     title: 'Heatmap Generator',
@@ -42,6 +43,8 @@ function createWindow () {
   })
 }
 
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=4096')
+app.allowRendererProcessReuse = false
 app.on('ready', createWindow)
 
 app.on('window-all-closed', () => {

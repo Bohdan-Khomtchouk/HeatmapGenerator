@@ -319,8 +319,9 @@ export default class Heatmapper {
   cluster (filePath, options) {
     var self = this
     return new Promise(function (resolve, reject) {
-      var outputObject = self.clusteringModule.ccluster(filePath, options.distFn, options.linkFn, options.axes)
-      resolve(outputObject)
+      var obj = self.clusteringModule.ccluster(filePath, options.distFn, options.linkFn, options.axes)
+      console.log(obj)
+      resolve(obj)
     })
   }
 
