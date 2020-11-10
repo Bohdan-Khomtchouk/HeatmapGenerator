@@ -5,63 +5,12 @@
 import HeatmapObject from './heatmap'
 
 export default class Heatmapper {
-  constructor (parent, filePath, settings) {
+  constructor (parent) {
     this.parent = parent
     this.d3 = require('d3')
-    this.clusteringModule = require('../clustering_module/build/Release/cclust')
     this.payload = {}
   }
 
-  // PUBLIC FUNCTIONS
-  /**
-   * Creates a heatmap graphic from a new dataset or existing file.
-   * @param {String} filePath Path to the source or existing file.
-   * @param {Object} [settings] Object with settings for a new heatmap.
-   */
-  buildHeatmap (filePath, settings, callback) {
-    settings = settings || null
-    var self = this
-    if (settings) {
-      if (settings.clustering.type === 'n') {
-        self.parse(filePath).then(function (data) {
-          return self.process(data)
-        }).then(function (payload) {
-          return self.createHTMP(payload, settings)
-        }).then(function () {
-          return self.renderHeatmapFrom('both', 0, true)
-        }).then(function () {
-          callback(null, self.heatmapObject.appearance)
-        }).catch((error) => {
-          callback(error)
-        })
-      } else {
-        let options = {
-          distFn: settings.clustering.distType,
-          linkFn: settings.clustering.linkType,
-          axes: settings.clustering.type
-        }
-        self.cluster(filePath, options).then(function (payload) {
-          return self.createHTMP(payload, settings)
-        }).then(function () {
-          return self.renderHeatmapFrom('both', 0, true)
-        }).then(function () {
-          callback(null, self.heatmapObject.appearance)
-        }).catch((error) => {
-          callback(error)
-        })
-      }
-    } else {
-      this.loadExistingHeatmap(filePath).then(function (data) {
-        return self.createHTMP(data)
-      }).then(function () {
-        return self.renderHeatmapFrom('both', 0, true)
-      }).then(function () {
-        callback(null, self.heatmapObject.appearance)
-      }).catch((error) => {
-        callback(error)
-      })
-    }
-  }
   changeHeatmapAppearance (comp, prop, change, altComp) {
     var self = this
     altComp = altComp || null
@@ -70,7 +19,7 @@ export default class Heatmapper {
       self.renderHeatmapFrom(comp.direction, ndx, false)
     }, altComp)
   }
-  loadExistingHeatmap (filePath) {
+  loadFromFile (filePath) {
     return new Promise(function (resolve, reject) {
       var fs = require('fs')
       fs.readFile(filePath, 'utf8', (error, data) => {
@@ -88,33 +37,158 @@ export default class Heatmapper {
       callback(err)
     })
   }
-  exportHeatmapFile (filePath, callback) {
+  exportHeatmapFile (callback) {
+    // clear the interactivity UI first
+    this.d3.select('.selectedRect')
+      .classed('selectedRect', false)
+      .transition()
+      .duration(200)
+      .style('fill', 'none')
+    this.d3.select('.editingTray')
+      .select('.activeTool')
+      .classed('activeTool', false)
+      .classed('inactiveTool', true)
+      .classed('d-none', true)
+    this.d3.select('.editingTray')
+      .select('.marginsEditor')
+      .classed('inactiveTool', false)
+      .classed('activeTool', true)
+      .classed('d-none', false)
+
+    // const fs = require('fs')
     /*
-    const fs = require('fs')
-    let w = this.svg.attr('width')
-    let h = this.svg.attr('height')
-    */
-    let ext = filePath.split('.').pop()
-    // let filename = filePath.split('/').pop()
-    if (ext === 'png') {
-      console.log('png')
-    } else if (ext === 'jpg') {
-      console.log('jpg')
-    } else {
-      console.log('pdf')
+    var w = parseFloat(this.svg.attr('width'))
+    var h = parseFloat(this.svg.attr('height'))
+    var maxSize =
+    var prod = w * h
+    if (prod > maxSize) {
+      var scale = Math.sqrt(maxSize / prod)
+      w = w * scale
+      h = h * scale
     }
+    */
+    let newNode = this.svg.node()
+    newNode.attr()
+    var svgString = this.getSVGString(this.svg.node())
+    var svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'})
+    var FileSaver = require('file-saver')
+    FileSaver.saveAs(svgBlob, 'visualization.svg')
+    /*
+    this.svgString2Image(svgString, w, h, 'png', save)
+    function save (dataBlob, filesize) {
+      var fileSaver = require('file-saver')
+      fileSaver.saveAs(dataBlob, 'visualization.png') // FileSaver.js function
+    } */
     callback(null)
   }
-  setCellSize (size) {
-    if (size < 1) size = 1
-    this.heatmapObject.appearance.heatmap.cellSize = size
-    this.heatmapObject.appearance.heatmap.width = size * this.heatmapObject.appearance.heatmap.columns
-    this.heatmapObject.appearance.heatmap.height = size * this.heatmapObject.appearance.heatmap.rows
-    // Need to force a recalculation on the heatmap
-    this.heatmapObject.recalculateComponentSize('horizontal', 'heatmap')
-    this.heatmapObject.recalculateComponentSize('vertical', 'heatmap')
 
-    this.renderHeatmapFrom('both', 0)
+  getSVGString (svgNode) {
+    svgNode.setAttribute('xlink', 'http://www.w3.org/1999/xlink')
+    var cssStyleText = getCSSStyles(svgNode)
+    appendCSS(cssStyleText, svgNode)
+
+    var serializer = new XMLSerializer()
+    var svgString = serializer.serializeToString(svgNode)
+    svgString = svgString.replace(/(\w+)?:?xlink=/g, 'xmlns:xlink=') // Fix root xlink without namespace
+    svgString = svgString.replace(/NS\d+:href/g, 'xlink:href') // Safari NS namespace fix
+
+    return svgString
+
+    function getCSSStyles (parentElement) {
+      var selectorTextArr = []
+
+      // Add Parent element Id and Classes to the list
+      selectorTextArr.push('#' + parentElement.id)
+      for (let c = 0; c < parentElement.classList.length; c++) {
+        if (!contains('.' + parentElement.classList[c], selectorTextArr)) {
+          selectorTextArr.push('.' + parentElement.classList[c])
+        }
+      }
+
+      // Add Children element Ids and Classes to the list
+      var nodes = parentElement.getElementsByTagName('*')
+      for (let i = 0; i < nodes.length; i++) {
+        var id = nodes[i].id
+        if (!contains('#' + id, selectorTextArr)) selectorTextArr.push('#' + id)
+
+        var classes = nodes[i].classList
+        for (let c = 0; c < classes.length; c++) {
+          if (!contains('.' + classes[c], selectorTextArr)) selectorTextArr.push('.' + classes[c])
+        }
+      }
+
+      // Extract CSS Rules
+      var extractedCSSText = ''
+      for (var i = 0; i < document.styleSheets.length; i++) {
+        var s = document.styleSheets[i]
+
+        try {
+          if (!s.cssRules) continue
+        } catch (e) {
+          if (e.name !== 'SecurityError') throw e // for Firefox
+          continue
+        }
+
+        var cssRules = s.cssRules
+        for (var r = 0; r < cssRules.length; r++) {
+          if (contains(cssRules[r].selectorText, selectorTextArr)) extractedCSSText += cssRules[r].cssText
+        }
+      }
+      return extractedCSSText
+
+      function contains (str, arr) {
+        return arr.indexOf(str) !== -1
+      }
+    }
+
+    function appendCSS (cssText, element) {
+      var styleElement = document.createElement('style')
+      styleElement.setAttribute('type', 'text/css')
+      styleElement.innerHTML = cssText
+      var refNode = element.hasChildNodes() ? element.children[0] : null
+      element.insertBefore(styleElement, refNode)
+    }
+  }
+  svgString2Image (svgString, width, height, format, callback) {
+    console.log('svgString: ' + svgString)
+    console.log('width: ' + width)
+    console.log('height: ' + height)
+    console.log('format: ' + format)
+
+    format = format || 'png'
+
+    var imgsrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString))) // Convert SVG string to data URL
+
+    var canvas = document.createElement('canvas')
+    var context = canvas.getContext('2d')
+
+    canvas.width = width
+    canvas.height = height
+
+    var image = new Image()
+    image.onload = function () {
+      context.clearRect(0, 0, width, height)
+      context.drawImage(image, 0, 0, width, height)
+      // var toBlob = require('canvas-to-blob')
+      console.log('logging canvas')
+      console.log(canvas)
+      canvas.toBlob(function (blob) {
+        if (blob) {
+          console.log('logging blob')
+          console.log(blob)
+          console.log('logging blob len')
+          console.log(blob.length)
+          // var filesize = Math.round(blob.size / 1024) + ' KB'
+          console.log('logging blob filesize')
+          // console.log(filesize)
+          if (callback) callback(blob, null)
+        } else {
+          console.log('no blob')
+        }
+      }, 'image/jpeg', 0.9)
+    }
+
+    image.src = imgsrc
   }
 
   // PRIVATE FUNCTIONS
@@ -255,76 +329,6 @@ export default class Heatmapper {
     })
   }
 
-  // Data Pipeline
-  /**
-   * Parses the CSV/TXT file.
-   * Returns 2D matrix.
-   * @param {String} filePath The path to the data file (.csv, .txt)
-   */
-  parse (filePath) {
-    var fs = require('fs')
-    var parser = require('papaparse')
-    return new Promise(function (resolve, reject) {
-      fs.readFile(filePath, 'utf8', (error, data) => {
-        if (error) reject(error)
-        else {
-          parser.parse(data, {
-            complete: function (results) {
-              resolve([...results.data])
-            },
-            dynamicTyping: true
-          })
-        }
-      })
-    })
-  }
-  /**
-   * Extracts labels from the matrix.
-   * Returns data object.
-   * @param {Number []} matrix The path to the data file (.csv, .txt)
-   */
-  process (matrix) {
-    return new Promise(function (resolve, reject) {
-      var colLabels = matrix.shift() // first sub-array is just column labels
-      var rowLabels = []
-      for (let a = 0, b = matrix.length; a < b; a++) rowLabels.push(matrix[a].shift()) // first object of each sub-array is the row's label
-      var offset = colLabels.length - matrix[0].length
-      if (offset > 0) colLabels.shift(offset) // band-aid solution for removing corner labels
-      if (matrix.length === 0 || matrix[0].length === 0) reject(new Error('Matrix has no content or formatting issues.'))
-      else if (colLabels.length === 0) reject(new Error('Column labels missing.'))
-      else if (rowLabels.length === 0) reject(new Error('Row labels missing'))
-      else {
-        resolve({
-          matrix: matrix,
-          rowLabels: {
-            data: rowLabels,
-            width: null
-          },
-          colLabels: {
-            data: colLabels,
-            height: null
-          },
-          rowTree: null,
-          colTree: null
-        })
-      }
-    })
-  }
-  /**
-   * Clusters matrix and updates data object using a Cpp module.
-   * Returns updated data object.
-   * @param {String} filePath Path to CSV/TXT file.
-   * @param {Dictionary} options Distance function, linkage function, and clustering axes.
-   */
-  cluster (filePath, options) {
-    var self = this
-    return new Promise(function (resolve, reject) {
-      var obj = self.clusteringModule.ccluster(filePath, options.distFn, options.linkFn, options.axes)
-      console.log(obj)
-      resolve(obj)
-    })
-  }
-
   // Graphical Pipeline
   /**
    * Establishes an SVG canvas.
@@ -343,6 +347,7 @@ export default class Heatmapper {
           .attr('class', 'canvas')
           .attr('width', w)
           .attr('height', h)
+          .style('background-color', 'white')
         resolve(null)
       } else {
         // updating existing canvas
@@ -699,7 +704,7 @@ export default class Heatmapper {
       let width = self.heatmapObject.appearance.heatmap.width
       let height = self.heatmapObject.appearance.heatmap.height
       if (self.svg.select('.htmpSVG').empty()) {
-        let colors = ['#0084FF', '#188EF7', '#3199EF', '#49A4E8', '#62AFE0', '#7ABAD9', '#93C5D1', '#ABD0C9', '#C4DBC2', '#DCE6BA', '#F5F1B3', '#F5DBA3', '#F6C694', '#F6B085', '#F79B76', '#F78667', '#F87057', '#F85B48', '#F94539', '#F9302A', '#FA1B1B']
+        // let colors = ['#0084FF', '#188EF7', '#3199EF', '#49A4E8', '#62AFE0', '#7ABAD9', '#93C5D1', '#ABD0C9', '#C4DBC2', '#DCE6BA', '#F5F1B3', '#F5DBA3', '#F6C694', '#F6B085', '#F79B76', '#F78667', '#F87057', '#F85B48', '#F94539', '#F9302A', '#FA1B1B']
         let matrix = []
         let min = 0
         let max = 0
@@ -710,10 +715,10 @@ export default class Heatmapper {
             max = Math.max(max, self.heatmapObject.data.matrix[r][c])
           }
         }
-        let middle = self.d3.median(matrix, function (d) {
+        /* let middle = self.d3.median(matrix, function (d) {
           return d.value
-        })
-        let colorScale = self.d3.scaleQuantile([min, middle, max], colors)
+        }) */
+        // let colorScale = self.d3.scaleQuantile([min, middle, max])
         self.svg.append('svg')
           .attr('class', 'htmpSVG')
           .attr('x', hSpace)
@@ -732,13 +737,16 @@ export default class Heatmapper {
           .attr('y', function (d) {
             return (d.row * size)
           })
+
           .attr('class', function (d) {
             return 'cell cell-border cr' + d.row + ' cc' + d.col
           })
           .attr('width', size)
           .attr('height', size)
           .style('fill', function (d) {
-            return colorScale(d.value)
+            let shift = d.value - min
+            let norm = shift / (max - min)
+            return self.d3.interpolateRdBu(norm)
           })
           .on('mouseover', function (d) {
             self.d3.select(this).classed('cell-hover', true)
@@ -910,6 +918,7 @@ export default class Heatmapper {
           .text(function (d) {
             return d
           })
+          .attr('font-size', self.heatmapObject.appearance.rowAxis.labels.font.size)
           .attr('x', 0)
           .attr('y', function (d, i) {
             return ((i * size) + space)
@@ -924,6 +933,7 @@ export default class Heatmapper {
       } else {
         self.svg.select('.rowLabels')
           .transition()
+          .attr('font-size', self.heatmapObject.appearance.rowAxis.labels.font.size)
           .attr('x', hSpace)
           .attr('y', vSpace)
           .attr('width', width)
@@ -1051,6 +1061,7 @@ export default class Heatmapper {
             return d
           })
           .style('text-anchor', 'end')
+          .attr('font-size', self.heatmapObject.appearance.colAxis.labels.font.size)
           .attr('transform', 'rotate (-90)')
           .attr('x', 0)
           .attr('y', function (d, i) {
@@ -1065,6 +1076,7 @@ export default class Heatmapper {
       } else {
         self.svg.select('.colLabels')
           .transition()
+          .attr('font-size', self.heatmapObject.appearance.colAxis.labels.font.size)
           .attr('x', hSpace)
           .attr('y', vSpace)
           .attr('width', width)
@@ -1100,7 +1112,7 @@ export default class Heatmapper {
             .attr('text-anchor', 'middle')
             .attr('x', hSpace)
             .attr('y', vSpace)
-            .style('font-size', '16px')
+            .attr('font-size', self.heatmapObject.appearance.title.font.size)
             .datum([{'selected': null}])
             .on('mouseover', function (d) {
               if (self.svg.select('.titleLabelRect').empty()) {
@@ -1187,6 +1199,7 @@ export default class Heatmapper {
         } else {
           self.svg.select('.titleLabel')
             .transition()
+            .attr('font-size', self.heatmapObject.appearance.title.font.size)
             .attr('x', self.heatmapObject.spacingTill('horizontal', 'tree') + (self.heatmapObject.appearance.heatmap.width / 2))
             .attr('y', self.heatmapObject.spacingTill('vertical', 'margin1'))
           let box = self.d3.select('.titleLabel').node().getBBox()

@@ -5,8 +5,9 @@ process.env.BABEL_ENV = 'main'
 const path = require('path')
 const { dependencies } = require('../package.json')
 const webpack = require('webpack')
+// const WorkerPlugin = require('worker-plugin')
 
-const MinifyPlugin = require("babel-minify-webpack-plugin")
+const MinifyPlugin = require('babel-minify-webpack-plugin')
 
 let mainConfig = {
   entry: {
@@ -17,6 +18,10 @@ let mainConfig = {
   ],
   module: {
     rules: [
+      {
+        test: /\.workerHelper\.js$/,
+        use: { loader: 'worker-loader' },
+      },
       {
         test: /\.(js)$/,
         enforce: 'pre',
@@ -50,6 +55,7 @@ let mainConfig = {
   },
   plugins: [
     new webpack.NoEmitOnErrorsPlugin()
+    // new WorkerPlugin()
   ],
   resolve: {
     extensions: ['.js', '.json', '.node']
@@ -63,7 +69,7 @@ let mainConfig = {
 if (process.env.NODE_ENV !== 'production') {
   mainConfig.plugins.push(
     new webpack.DefinePlugin({
-      '__static': `"${path.join(__dirname, '../static').replace(/\\/g, '\\\\')}"`
+      '__static': `'${path.join(__dirname, '../static').replace(/\\/g, '\\\\')}'`
     })
   )
 }
@@ -75,7 +81,7 @@ if (process.env.NODE_ENV === 'production') {
   mainConfig.plugins.push(
     new MinifyPlugin(),
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': '"production"'
+      'process.env.NODE_ENV': 'production'
     })
   )
 }

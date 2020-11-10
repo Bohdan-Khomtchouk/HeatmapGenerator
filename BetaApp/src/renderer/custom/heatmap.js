@@ -79,7 +79,7 @@ export default class Heatmap {
     if (this.settings.colAxis !== '') {
       this.appearance.colAxis.title = {
         font: {
-          size: 10
+          size: 12
         },
         padding: {
           top: 30
@@ -98,7 +98,7 @@ export default class Heatmap {
     // Row Labels
     this.appearance.rowAxis.labels = {
       font: {
-        size: 10
+        size: 14
       },
       padding: {
         left: 15
@@ -108,7 +108,7 @@ export default class Heatmap {
     // Col Labels
     this.appearance.colAxis.labels = {
       font: {
-        size: 10
+        size: 14
       },
       padding: {
         top: 15
@@ -118,21 +118,25 @@ export default class Heatmap {
     // Clustering
     var size = [] // Row Size, Col Size
     var padding = [] // Row R, Col T (only between dendrogram and heatmap)
+    if (this.data.rowTree != null) var rowHeight = 50 + this.data.rowTree.height * 0.2
+    if (this.data.colTree != null) var colHeight = 50 + this.data.colTree.height * 0.2
+    console.log('row height' + rowHeight)
+    console.log('col height' + rowHeight)
     switch (this.settings.clustering.type) {
       case 'n':
         size = [0, 0]
         padding = [0, 0]
         break
       case 'r':
-        size = [100, 0]
+        size = [rowHeight, 0]
         padding = [10, 0]
         break
       case 'c':
-        size = [0, 50]
+        size = [0, colHeight]
         padding = [0, 10]
         break
       case 'b':
-        size = [100, 50]
+        size = [rowHeight, colHeight]
         padding = [10, 10]
         break
       default:

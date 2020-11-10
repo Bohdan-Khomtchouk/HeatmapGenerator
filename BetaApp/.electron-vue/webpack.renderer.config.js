@@ -6,7 +6,7 @@ const path = require('path')
 const { dependencies } = require('../package.json')
 const webpack = require('webpack')
 
-const MinifyPlugin = require("babel-minify-webpack-plugin")
+const MinifyPlugin = require('babel-minify-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
@@ -31,6 +31,10 @@ let rendererConfig = {
   ],
   module: {
     rules: [
+      {
+        test: /\.workerHelper\.js$/,
+        use: { loader: 'worker-loader' },
+      },
       {
         test: /\.(js|vue)$/,
         enforce: 'pre',
@@ -160,7 +164,7 @@ let rendererConfig = {
 if (process.env.NODE_ENV !== 'production') {
   rendererConfig.plugins.push(
     new webpack.DefinePlugin({
-      '__static': `"${path.join(__dirname, '../static').replace(/\\/g, '\\\\')}"`
+      '__static': `'${path.join(__dirname, '../static').replace(/\\/g, '\\\\')}'`
     })
   )
 }
@@ -181,7 +185,7 @@ if (process.env.NODE_ENV === 'production') {
       }
     ]),
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': '"production"'
+      'process.env.NODE_ENV': 'production'
     }),
     new webpack.LoaderOptionsPlugin({
       minimize: true
