@@ -10,6 +10,7 @@
     "build": "node .electron-vue/build.js && electron-builder -l",
     "buildmac": "node .electron-vue/build.js && electron-builder",
     "buildwin": "node .electron-vue/build.js && electron-builder -w",
+    "buildall": "node .electron-vue/build.js && electron-builder -lmw",
     "build:dir": "node .electron-vue/build.js && electron-builder --dir",
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
     "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
@@ -62,16 +63,20 @@
     },
     "linux": {
       "icon": "build/icons"
+    },
+    "extraResources": {
+      "from": "./src/renderer/custom/workers/files/",
+      "to": "extraResources",
+      "filter": [
+        "**/*"
+      ]
     }
   },
   "dependencies": {
     "axios": "^0.18.0",
-    "blueimp-canvas-to-blob": "^3.28.0",
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.5.0",
-    "canvas-to-blob": "^1.0.0",
     "d3": "^5.16.0",
-    "electron-prebuilt": "^1.4.13",
     "electron-progressbar": "^1.2.0",
     "electron-workers": "^1.10.3",
     "file-saver": "^2.0.2",

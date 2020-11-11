@@ -39,11 +39,6 @@ export default class Heatmapper {
   }
   exportHeatmapFile (callback) {
     // clear the interactivity UI first
-    this.d3.select('.selectedRect')
-      .classed('selectedRect', false)
-      .transition()
-      .duration(200)
-      .style('fill', 'none')
     this.d3.select('.editingTray')
       .select('.activeTool')
       .classed('activeTool', false)
@@ -54,6 +49,18 @@ export default class Heatmapper {
       .classed('inactiveTool', false)
       .classed('activeTool', true)
       .classed('d-none', false)
+    this.d3.select('.selectedRect')
+      .classed('selectedRect', false)
+      .style('fill', 'none')
+
+    var svgString = this.getSVGString(this.svg.node())
+    var svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'})
+    var FileSaver = require('file-saver')
+    let fpath = this.heatmapObject.settings.fileName
+    let path = require('path')
+    let filename = path.basename(fpath, path.extname(fpath))
+    FileSaver.saveAs(svgBlob, filename + '.svg')
+    callback(null)
 
     // const fs = require('fs')
     /*
@@ -67,19 +74,13 @@ export default class Heatmapper {
       h = h * scale
     }
     */
-    let newNode = this.svg.node()
-    newNode.attr()
-    var svgString = this.getSVGString(this.svg.node())
-    var svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'})
-    var FileSaver = require('file-saver')
-    FileSaver.saveAs(svgBlob, 'visualization.svg')
+
     /*
     this.svgString2Image(svgString, w, h, 'png', save)
     function save (dataBlob, filesize) {
       var fileSaver = require('file-saver')
       fileSaver.saveAs(dataBlob, 'visualization.png') // FileSaver.js function
     } */
-    callback(null)
   }
 
   getSVGString (svgNode) {
@@ -150,10 +151,10 @@ export default class Heatmapper {
     }
   }
   svgString2Image (svgString, width, height, format, callback) {
-    console.log('svgString: ' + svgString)
-    console.log('width: ' + width)
-    console.log('height: ' + height)
-    console.log('format: ' + format)
+    // // console.log('svgString: ' + svgString)
+    // console.log('width: ' + width)
+    // console.log('height: ' + height)
+    // console.log('format: ' + format)
 
     format = format || 'png'
 
@@ -170,20 +171,20 @@ export default class Heatmapper {
       context.clearRect(0, 0, width, height)
       context.drawImage(image, 0, 0, width, height)
       // var toBlob = require('canvas-to-blob')
-      console.log('logging canvas')
-      console.log(canvas)
+      // console.log('logging canvas')
+      // console.log(canvas)
       canvas.toBlob(function (blob) {
         if (blob) {
-          console.log('logging blob')
-          console.log(blob)
-          console.log('logging blob len')
-          console.log(blob.length)
+          // console.log('logging blob')
+          // console.log(blob)
+          // console.log('logging blob len')
+          // console.log(blob.length)
           // var filesize = Math.round(blob.size / 1024) + ' KB'
-          console.log('logging blob filesize')
-          // console.log(filesize)
+          // console.log('logging blob filesize')
+          // // console.log(filesize)
           if (callback) callback(blob, null)
         } else {
-          console.log('no blob')
+          // console.log('no blob')
         }
       }, 'image/jpeg', 0.9)
     }
@@ -918,7 +919,7 @@ export default class Heatmapper {
           .text(function (d) {
             return d
           })
-          .attr('font-size', self.heatmapObject.appearance.rowAxis.labels.font.size)
+          .style('font-size', 12)
           .attr('x', 0)
           .attr('y', function (d, i) {
             return ((i * size) + space)
@@ -933,7 +934,6 @@ export default class Heatmapper {
       } else {
         self.svg.select('.rowLabels')
           .transition()
-          .attr('font-size', self.heatmapObject.appearance.rowAxis.labels.font.size)
           .attr('x', hSpace)
           .attr('y', vSpace)
           .attr('width', width)
@@ -1053,6 +1053,9 @@ export default class Heatmapper {
             }
             d.selected = !d.selected
           })
+          .append('g')
+          .attr('class', 'colLabelRot')
+          .attr('transform', 'rotate (270)')
           .selectAll('.colLabelg')
           .data(self.heatmapObject.data.colLabels.data)
           .enter()
@@ -1061,8 +1064,7 @@ export default class Heatmapper {
             return d
           })
           .style('text-anchor', 'end')
-          .attr('font-size', self.heatmapObject.appearance.colAxis.labels.font.size)
-          .attr('transform', 'rotate (-90)')
+          .style('font-size', 12)
           .attr('x', 0)
           .attr('y', function (d, i) {
             return ((i * size) + space)
@@ -1072,11 +1074,11 @@ export default class Heatmapper {
           })
           .style('pointer-events', 'none')
           .style('user-select', 'none')
+
         resolve(null)
       } else {
         self.svg.select('.colLabels')
           .transition()
-          .attr('font-size', self.heatmapObject.appearance.colAxis.labels.font.size)
           .attr('x', hSpace)
           .attr('y', vSpace)
           .attr('width', width)
@@ -1086,6 +1088,9 @@ export default class Heatmapper {
           .attr('y', function (d, i) {
             return ((i * size) + space)
           })
+        self.svg.select('.colLabelRot')
+          .transition()
+          .attr('transform', 'rotate (270)')
         self.d3.select('.colLabelRect')
           .transition()
           .attr('x', hSpace)
@@ -1112,7 +1117,7 @@ export default class Heatmapper {
             .attr('text-anchor', 'middle')
             .attr('x', hSpace)
             .attr('y', vSpace)
-            .attr('font-size', self.heatmapObject.appearance.title.font.size)
+            .style('font-size', 16)
             .datum([{'selected': null}])
             .on('mouseover', function (d) {
               if (self.svg.select('.titleLabelRect').empty()) {
@@ -1199,7 +1204,6 @@ export default class Heatmapper {
         } else {
           self.svg.select('.titleLabel')
             .transition()
-            .attr('font-size', self.heatmapObject.appearance.title.font.size)
             .attr('x', self.heatmapObject.spacingTill('horizontal', 'tree') + (self.heatmapObject.appearance.heatmap.width / 2))
             .attr('y', self.heatmapObject.spacingTill('vertical', 'margin1'))
           let box = self.d3.select('.titleLabel').node().getBBox()

@@ -120,8 +120,8 @@ export default class Heatmap {
     var padding = [] // Row R, Col T (only between dendrogram and heatmap)
     if (this.data.rowTree != null) var rowHeight = 50 + this.data.rowTree.height * 0.2
     if (this.data.colTree != null) var colHeight = 50 + this.data.colTree.height * 0.2
-    console.log('row height' + rowHeight)
-    console.log('col height' + rowHeight)
+    // console.log('row height' + rowHeight)
+    // console.log('col height' + rowHeight)
     switch (this.settings.clustering.type) {
       case 'n':
         size = [0, 0]

@@ -2,7 +2,7 @@ var registerPromiseWorker = require('promise-worker/register')
 
 registerPromiseWorker((message) => {
   if (message.type === 'parse') {
-    console.log('parsing')
+    // console.log('parsing')
     return new Promise(function (resolve, reject) {
       let filePath = message.filePath
       var fs = require('fs')
@@ -20,7 +20,7 @@ registerPromiseWorker((message) => {
       })
     })
   } else if (message.type === 'process') {
-    console.log('processing')
+    // console.log('processing')
     return new Promise(function (resolve, reject) {
       let matrix = message.matrix
       var colLabels = matrix.shift() // first sub-array is just column labels
@@ -53,11 +53,15 @@ registerPromiseWorker((message) => {
       let numOfRows = matrix.length - 1
       let numOfCols = matrix[1].length
       let numOfElements = numOfRows * numOfCols
-      console.log('num of elements: ' + numOfElements)
-      var fs = require('fs')
+      // console.log('num of elements: ' + numOfElements)
       let path = require('path')
-      let url = path.resolve(__dirname, './speedTest.csv')
-      fs.readFile(url, 'utf8', (error, data) => {
+      const dataPath =
+        process.env.NODE_ENV === 'development'
+          ? path.resolve(__dirname, './files/speedTest.csv')
+          : path.join(path.dirname(__dirname), '../../extraResources', 'speedTest.csv')
+      // console.log('dataPath: ' + dataPath)
+      var fs = require('fs')
+      fs.readFile(dataPath, 'utf8', (error, data) => {
         if (error) reject(error)
         else {
           var parser = require('../../../../node_modules/papaparse')
@@ -84,7 +88,7 @@ registerPromiseWorker((message) => {
       })
     })
   } else if (message.type === 'cluster') {
-    console.log('clustering')
+    // console.log('clustering')
     return new Promise(function (resolve, reject) {
       var clusteringModule = require('../../clustering_module/build/Release/cclust')
       var obj = clusteringModule.ccluster(message.filePath, message.distFn, message.linkFn, message.axes)

@@ -19,7 +19,7 @@ let mainConfig = {
   module: {
     rules: [
       {
-        test: /\.workerHelper\.js$/,
+        test: /\.workerHelper \.js$/,
         use: { loader: 'worker-loader' },
       },
       {
@@ -81,7 +81,7 @@ if (process.env.NODE_ENV === 'production') {
   mainConfig.plugins.push(
     new MinifyPlugin(),
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': 'production'
+      'process.env.NODE_ENV': '"production"'
     })
   )
 }

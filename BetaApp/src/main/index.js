@@ -44,8 +44,8 @@ function createWindow () {
     webPreferences: {
       nodeIntegration: true,
       nodeIntegrationInWorker: true,
-      enableRemoteModule: true
-      // , devTools: false
+      enableRemoteModule: true,
+      devTools: false
     },
     title: 'Heatmap Generator',
     show: false

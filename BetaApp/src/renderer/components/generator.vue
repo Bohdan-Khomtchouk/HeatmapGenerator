@@ -338,6 +338,7 @@
         // if (this.htmp !== null) this.resetGUI()
         var options = {
           title: this.mainTitle,
+          fileName: this.filename,
           rowAxis: this.rowAxis,
           colAxis: this.colAxis,
           clustering: {
@@ -373,7 +374,7 @@
             return workerTask.clusterTime(matrix)
           }).then(result => {
             self.clustEst = result
-            console.log('estimated time: ' + result)
+            // console.log('estimated time: ' + result)
             if (result > 30) {
               const {dialog} = require('electron').remote
               let decision = dialog.showMessageBoxSync({
@@ -422,7 +423,7 @@
           }).then(() => {
             return workerTask.cluster(self.filename, options)
           }).then(payload => {
-            console.log(payload)
+            // console.log(payload)
             clearInterval(self.progressInterval)
             self.clustEst = null
             self.clusteringProgress = 80
@@ -450,7 +451,7 @@
         dialog.showOpenDialog({
           properties: ['openFile'],
           filters: [
-            {name: 'Heatmap Data', extensions: ['txt', 'csv']}
+            {name: 'Heatmap Data', extensions: ['csv']}
           ]
         }).then((data) => {
           if (data.filePaths.length > 0) {
