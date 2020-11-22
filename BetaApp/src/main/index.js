@@ -45,7 +45,7 @@ function createWindow () {
       nodeIntegration: true,
       nodeIntegrationInWorker: true,
       enableRemoteModule: true,
-      devTools: true
+      devTools: false
     },
     title: 'Heatmap Generator',
     show: false

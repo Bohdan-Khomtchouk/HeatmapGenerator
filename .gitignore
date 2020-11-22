@@ -3,44 +3,17 @@
 
 *.iml
 
-.idea/inspectionProfiles/Project_Default.xml
-
-.idea/misc.xml
-
-.idea/modules.xml
-
-.idea/vcs.xml
-
-.idea/workspace.xml
-
-heatmapgenerator-electron/.idea/inspectionProfiles/Project_Default.xml
-
-heatmapgenerator-electron/.idea/modules.xml
-
-heatmapgenerator-electron/.idea/misc.xml
-
 *.xml
+
 vue/BetaApp/dist/electron/.gitkeep
 vue/BetaApp/dist/web/.gitkeep
 
-vue/BetaApp/src/renderer/.Rhistory
-
-vue/BetaApp/src/extraResources/.Rhistory
-
 BetaApp/src/renderer/clustering_module/demo.js
-BetaApp/src/renderer/clustering_module/build/bonsaiclust.target.mk
-BetaApp/src/renderer/clustering_module/build/bonsaiclust.target.mk
-BetaApp/src/renderer/clustering_module/build/bonsaiclust.target.mk
+
 *.mk
-BetaApp/src/renderer/clustering_module/build/Release/bonsaiclust.a
-BetaApp/src/renderer/clustering_module/build/Makefile
 *.d
 *.mk
 *.gypi
 *.a
 *.node
 *.o
-*.gypi
-BetaApp/src/renderer/clustering_module/build/Makefile
-*.d
-*.a

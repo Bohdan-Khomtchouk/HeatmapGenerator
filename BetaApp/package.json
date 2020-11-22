@@ -1,8 +1,8 @@
 {
   "name": "HeatmapGenerator",
-  "version": "1.0.0",
-  "author": "Ali Rahman <alirahman@uchicago.edu>",
-  "description": "A cross-platform heatmap generator built with Electron.",
+  "version": "2.0.0",
+  "author": "Bohdan Khomtchouk, Ali Rahman",
+  "description": "A cross-platform heatmap editor.",
   "license": null,
   "main": "./dist/electron/main.js",
   "scripts": {
@@ -23,8 +23,8 @@
     "postinstall": "npm run lint:fix"
   },
   "build": {
-    "productName": "HeatmapGenerator",
-    "appId": "com.alirahman.HeatmapGenerator",
+    "productName": "HeatmapGenerator 2.0",
+    "appId": "com.Khomtchouk.HeatmapGenerator",
     "directories": {
       "output": "build"
     },
