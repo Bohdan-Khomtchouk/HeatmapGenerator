@@ -2,6 +2,8 @@
 
 process.env.BABEL_ENV = 'main'
 
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+
 const path = require('path')
 const { dependencies } = require('../package.json')
 const webpack = require('webpack')
@@ -54,8 +56,10 @@ let mainConfig = {
     path: path.join(__dirname, '../dist/electron')
   },
   plugins: [
-    new webpack.NoEmitOnErrorsPlugin()
-    // new WorkerPlugin()
+    new webpack.NoEmitOnErrorsPlugin(),
+    new CopyWebpackPlugin([
+      'src/extraResources/Addon/cclust.node'
+    ])
   ],
   resolve: {
     extensions: ['.js', '.json', '.node']

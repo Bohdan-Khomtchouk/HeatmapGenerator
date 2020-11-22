@@ -281,7 +281,7 @@
 <script>
   import Heatmapper from '../custom/Heatmapper.js'
   // eslint-disable-next-line import/no-webpack-loader-syntax
-  import workerTask from '../custom/workers/workerHelper'
+  import workerTask from '../custom/workerHelper'
 
   export default {
     name: 'Generator',

@@ -65,7 +65,7 @@
       "icon": "build/icons"
     },
     "extraResources": {
-      "from": "./src/renderer/custom/workers/files/",
+      "from": "./src/extraResources/",
       "to": "extraResources",
       "filter": [
         "**/*"

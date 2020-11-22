@@ -2,14 +2,16 @@
 
 process.env.BABEL_ENV = 'renderer'
 
+
 const path = require('path')
 const { dependencies } = require('../package.json')
 const webpack = require('webpack')
-
+const NormalModuleReplacementPlugin = require('webpack').NormalModuleReplacementPlugin
 const MinifyPlugin = require('babel-minify-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+
 const { VueLoaderPlugin } = require('vue-loader')
 
 /**
@@ -31,10 +33,6 @@ let rendererConfig = {
   ],
   module: {
     rules: [
-      {
-        test: /\.workerHelper\.js$/,
-        use: { loader: 'worker-loader' },
-      },
       {
         test: /\.(js|vue)$/,
         enforce: 'pre',
@@ -116,7 +114,14 @@ let rendererConfig = {
             name: 'fonts/[name]--[folder].[ext]'
           }
         }
-      }
+      },
+      {
+        test: /\.workerHelper\.js$/,
+        loader: 'worker-loader',
+        options: {
+          publicPath: '/dist'
+        },
+      },
     ]
   },
   node: {
@@ -141,7 +146,11 @@ let rendererConfig = {
         : false
     }),
     new webpack.HotModuleReplacementPlugin(),
-    new webpack.NoEmitOnErrorsPlugin()
+    new webpack.NoEmitOnErrorsPlugin(),
+    new NormalModuleReplacementPlugin(
+      /^bindings$/,
+      `${__dirname}/src/bindings`
+    )
   ],
   output: {
     filename: '[name].js',
@@ -149,9 +158,11 @@ let rendererConfig = {
     path: path.join(__dirname, '../dist/electron')
   },
   resolve: {
+    modules: [path.resolve(__dirname, '../src'), 'node_modules'],
     alias: {
       '@': path.join(__dirname, '../src/renderer'),
-      'vue$': 'vue/dist/vue.esm.js'
+      'vue$': 'vue/dist/vue.esm.js',
+      'cclust': path.resolve(__dirname, '../src/extraResources/Addon/cclust')
     },
     extensions: ['.js', '.vue', '.json', '.css', '.node']
   },
@@ -191,6 +202,11 @@ if (process.env.NODE_ENV === 'production') {
       minimize: true
     })
   )
+  rendererConfig.resolve.alias = {
+    '@': path.join(__dirname, '../src/renderer'),
+    'vue$': 'vue/dist/vue.esm.js',
+    'cclust': path.resolve(__dirname, '../dist/electron/cclust')
+  }
 }
 
 module.exports = rendererConfig
