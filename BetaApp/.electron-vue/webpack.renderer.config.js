@@ -162,7 +162,7 @@ let rendererConfig = {
     alias: {
       '@': path.join(__dirname, '../src/renderer'),
       'vue$': 'vue/dist/vue.esm.js',
-      'cclust': path.resolve(__dirname, '../src/extraResources/Addon/cclust')
+      'cclust': path.resolve(__dirname, '../src/extraResources/cclust')
     },
     extensions: ['.js', '.vue', '.json', '.css', '.node']
   },

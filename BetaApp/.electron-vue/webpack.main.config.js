@@ -58,7 +58,7 @@ let mainConfig = {
   plugins: [
     new webpack.NoEmitOnErrorsPlugin(),
     new CopyWebpackPlugin([
-      'src/extraResources/Addon/cclust.node'
+      'src/extraResources/cclust.node'
     ])
   ],
   resolve: {
