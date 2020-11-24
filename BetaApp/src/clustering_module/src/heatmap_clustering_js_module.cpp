@@ -334,9 +334,6 @@ void cluster_axis(int num_data_rows, int num_data_cols, char distance_func, char
 
 napi_value ClusterC(napi_env env, napi_callback_info info) {
 
-    clock_t start, mid, mid2, end;
-    start = clock();
-
     /* =========================== Input Parsing (Extracting napi object parameters) =========================== */
 
     napi_status status;
@@ -357,19 +354,19 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
 
     size_t distfunc_input_bytes;
     napi_get_value_string_utf8(env, napi_distfunc, NULL, 0, &distfunc_input_bytes);
-    char _distance_function[distfunc_input_bytes + 1];
+    char* _distance_function = new char[distfunc_input_bytes + 1];
     napi_get_value_string_utf8(env, napi_distfunc, _distance_function, distfunc_input_bytes + 1, 0);
     char distance_function = _distance_function[0];
 
     size_t linkfunc_input_bytes;
     napi_get_value_string_utf8(env, napi_linkfunc, NULL, 0, &linkfunc_input_bytes);
-    char _linkage_function[linkfunc_input_bytes + 1];
+    char* _linkage_function = new char[linkfunc_input_bytes + 1];
     napi_get_value_string_utf8(env, napi_linkfunc, _linkage_function, linkfunc_input_bytes + 1, 0);
     char linkage_function = _linkage_function[0];
 
     size_t axes_input_bytes;
     napi_get_value_string_utf8(env, napi_axes, NULL, 0, &axes_input_bytes);
-    char _axes[axes_input_bytes + 1];
+    char* _axes = new char[axes_input_bytes + 1];
     napi_get_value_string_utf8(env, napi_axes, _axes, axes_input_bytes + 1, 0);
     string axes(_axes);
 
@@ -402,7 +399,7 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
 
     size_t heatmapcsvpath_bytes;
     napi_get_value_string_utf8(env, napi_heatmapcsvpath, NULL, 0, &heatmapcsvpath_bytes);
-    char csv_path[heatmapcsvpath_bytes + 1];
+    char* csv_path = new char[heatmapcsvpath_bytes + 1];
     napi_get_value_string_utf8(env, napi_heatmapcsvpath, csv_path, heatmapcsvpath_bytes + 1, 0);
 
     int num_data_rows = -1;
@@ -486,8 +483,6 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
         row_num += 1;
     }
 
-    mid = clock();
-
     /* =========================== Hierarchical clustering =========================== */
     map<int, TreeNode> col_node_dict;
     map<int, TreeNode> row_node_dict;
@@ -498,8 +493,6 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
     if (col_dendro_flag) {
         cluster_axis(num_data_rows, num_data_cols, distance_function, linkage_function, 1, heatmap_data, mask, col_names, col_node_dict);
     }
-
-    mid2 = clock();
 
     /* =========================== Output Generation (Wrapping Napi Object) =========================== */
 
@@ -597,25 +590,6 @@ napi_value ClusterC(napi_env env, napi_callback_info info) {
         delete [] heatmap_data[i];
     }
     delete [] heatmap_data;
-
-    end = clock();
-    double time_input = double(mid-start)/double(CLOCKS_PER_SEC);
-    double time_clustering = double(mid2-mid)/double(CLOCKS_PER_SEC);
-    double time_output = double(end-mid2)/double(CLOCKS_PER_SEC);
-    double time_taken_overall = double(end-start)/double(CLOCKS_PER_SEC);
-
-    cerr << "Input decoding time (NAPI objects to C++): " << fixed
-         << time_input << setprecision(5);
-    cerr << " sec " << endl;
-    cerr << "Clustering time : " << fixed
-         << time_clustering << setprecision(5);
-    cerr << " sec " << endl;
-    cerr << "Output encoding time (C++ to NAPI object): " << fixed
-         << time_output << setprecision(5);
-    cerr << " sec " << endl;
-    cerr << "Overall time taken by program is : " << fixed
-         << time_taken_overall << setprecision(5);
-    cerr << " sec " << endl;
 
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "Unable to create return value");
