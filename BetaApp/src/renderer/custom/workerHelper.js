@@ -62,7 +62,7 @@ const clusterTime = (matrix) => {
     let path = require('path')
     let process = require('electron').remote.process
     var dataPath
-    if (process.env.NODE_ENV === 'production') dataPath = path.resolve(path.dirname(__dirname), '../../extraResources', 'speedTest.csv')
+    if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === undefined) dataPath = path.resolve(path.dirname(__dirname), '../../extraResources', 'speedTest.csv')
     else dataPath = path.resolve(path.dirname(__dirname), '../extraResources', 'speedTest.csv')
     console.log('dataPath: ' + dataPath)
     var fs = require('fs')

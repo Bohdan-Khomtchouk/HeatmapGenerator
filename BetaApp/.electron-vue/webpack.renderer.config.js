@@ -6,7 +6,6 @@ process.env.BABEL_ENV = 'renderer'
 const path = require('path')
 const { dependencies } = require('../package.json')
 const webpack = require('webpack')
-const NormalModuleReplacementPlugin = require('webpack').NormalModuleReplacementPlugin
 const MinifyPlugin = require('babel-minify-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
@@ -70,10 +69,6 @@ let rendererConfig = {
         exclude: /node_modules/
       },
       {
-        test: /\.node$/,
-        use: 'node-loader'
-      },
-      {
         test: /\.vue$/,
         use: {
           loader: 'vue-loader',
@@ -115,18 +110,11 @@ let rendererConfig = {
           }
         }
       },
-      {
-        test: /\.workerHelper\.js$/,
-        loader: 'worker-loader',
-        options: {
-          publicPath: '/dist'
-        },
-      },
     ]
   },
   node: {
-    __dirname: process.env.NODE_ENV !== 'production',
-    __filename: process.env.NODE_ENV !== 'production'
+    __dirname: false,
+    __filename: false
   },
   plugins: [
     new VueLoaderPlugin(),
@@ -146,11 +134,6 @@ let rendererConfig = {
         : false
     }),
     new webpack.HotModuleReplacementPlugin(),
-    new webpack.NoEmitOnErrorsPlugin(),
-    new NormalModuleReplacementPlugin(
-      /^bindings$/,
-      `${__dirname}/src/bindings`
-    )
   ],
   output: {
     filename: '[name].js',
@@ -158,11 +141,9 @@ let rendererConfig = {
     path: path.join(__dirname, '../dist/electron')
   },
   resolve: {
-    modules: [path.resolve(__dirname, '../src'), 'node_modules'],
     alias: {
       '@': path.join(__dirname, '../src/renderer'),
-      'vue$': 'vue/dist/vue.esm.js',
-      'cclust': path.resolve(__dirname, '../src/extraResources/Addon/cclust')
+      'vue$': 'vue/dist/vue.esm.js'
     },
     extensions: ['.js', '.vue', '.json', '.css', '.node']
   },
@@ -185,7 +166,6 @@ if (process.env.NODE_ENV !== 'production') {
  */
 if (process.env.NODE_ENV === 'production') {
   rendererConfig.devtool = ''
-
   rendererConfig.plugins.push(
     new MinifyPlugin(),
     new CopyWebpackPlugin([
@@ -202,11 +182,6 @@ if (process.env.NODE_ENV === 'production') {
       minimize: true
     })
   )
-  rendererConfig.resolve.alias = {
-    '@': path.join(__dirname, '../src/renderer'),
-    'vue$': 'vue/dist/vue.esm.js',
-    'cclust': path.resolve(__dirname, '../dist/electron/cclust')
-  }
 }
 
 module.exports = rendererConfig

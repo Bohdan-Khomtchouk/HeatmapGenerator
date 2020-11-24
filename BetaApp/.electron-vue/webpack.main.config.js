@@ -7,7 +7,6 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const path = require('path')
 const { dependencies } = require('../package.json')
 const webpack = require('webpack')
-// const WorkerPlugin = require('worker-plugin')
 
 const MinifyPlugin = require('babel-minify-webpack-plugin')
 
@@ -20,10 +19,6 @@ let mainConfig = {
   ],
   module: {
     rules: [
-      {
-        test: /\.workerHelper \.js$/,
-        use: { loader: 'worker-loader' },
-      },
       {
         test: /\.(js)$/,
         enforce: 'pre',
@@ -39,10 +34,6 @@ let mainConfig = {
         test: /\.js$/,
         use: 'babel-loader',
         exclude: /node_modules/
-      },
-      {
-        test: /\.node$/,
-        use: 'node-loader'
       }
     ]
   },
@@ -56,10 +47,7 @@ let mainConfig = {
     path: path.join(__dirname, '../dist/electron')
   },
   plugins: [
-    new webpack.NoEmitOnErrorsPlugin(),
-    new CopyWebpackPlugin([
-      'src/extraResources/Addon/cclust.node'
-    ])
+    new webpack.NoEmitOnErrorsPlugin()
   ],
   resolve: {
     extensions: ['.js', '.json', '.node']
