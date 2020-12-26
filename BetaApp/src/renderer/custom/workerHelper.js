@@ -1,11 +1,16 @@
-// workerHelper.js
-// Off-loading Heatmapper.js onto worker thread for the sake of protecting render thread from blocking.
-import PromiseWorker from 'promise-worker'
+// Title: workerHelper.js
+// Description: Data processing functions necessary for clustering / heatmap generation
+// Notes: Functions will be moved back to Heatmapper most likely.
+
+// Setup
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import Worker from 'worker-loader!./worker'
-
+import PromiseWorker from 'promise-worker'
 const worker = new Worker()
 const promiseWorker = new PromiseWorker(worker)
+
+// Function: Parse
+// Description: Reads data from file path and returns as JS matrix
 const parse = (filePath) => {
   return new Promise(function (resolve, reject) {
     var fs = require('fs')
@@ -23,6 +28,9 @@ const parse = (filePath) => {
     })
   })
 }
+
+// Function: Process
+// Description: Data verification/polishing after parsing (but before visualization/clustering)
 const process = (matrix) => {
   return new Promise(function (resolve, reject) {
     var colLabels = matrix.shift() // first sub-array is just column labels
@@ -50,20 +58,25 @@ const process = (matrix) => {
     }
   })
 }
+
+// Function: Cluster
+// Description: Invokes clustering from worker.js.
 const cluster = (filePath, options) => promiseWorker.postMessage({
   type: 'cluster', filePath: filePath, distFn: options.clustering.distType, linkFn: options.clustering.linkType, axes: options.clustering.type
 })
+
+// Function: ClusterTime (rename)
+// Description: Uses experimental data to provide progress bar estimate.
 const clusterTime = (matrix) => {
   return new Promise(function (resolve, reject) {
     let numOfRows = matrix.length - 1
     let numOfCols = matrix[1].length
     let numOfElements = numOfRows * numOfCols
-    // console.log('num of elements: ' + numOfElements)
     let path = require('path')
     let process = require('electron').remote.process
     var dataPath
-    if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === undefined) dataPath = path.resolve(path.dirname(__dirname), '../../extraResources', 'speedTest.csv')
-    else dataPath = path.resolve(path.dirname(__dirname), '../extraResources', 'speedTest.csv')
+    if (process.env.NODE_ENV === 'production') dataPath = path.resolve(path.dirname(__dirname), '../../extraResources', 'speedTest.csv')
+    else dataPath = path.resolve('src/extraResources', 'speedTest.csv')
     console.log('dataPath: ' + dataPath)
     var fs = require('fs')
     fs.readFile(dataPath, 'utf8', (error, data) => {

@@ -280,8 +280,6 @@
 </style>
 <script>
   import Heatmapper from '../custom/Heatmapper.js'
-  // eslint-disable-next-line import/no-webpack-loader-syntax
-  import workerTask from '../custom/workerHelper'
 
   export default {
     name: 'Generator',
@@ -351,9 +349,9 @@
         this.htmp = new Heatmapper('#graphDiv')
         if (options.clustering.type === 'n') {
           // No clustering
-          workerTask.parse(this.filename).then(result => {
+          this.htmp.parse(this.filename).then(result => {
             self.clusteringProgress = 30
-            return workerTask.process(result)
+            return self.htmp.process(result)
           }).then(payload => {
             self.clusteringProgress = 60
             return self.htmp.createHTMP(payload, options)
@@ -369,9 +367,9 @@
           })
         } else {
           // Clustering
-          workerTask.parse(this.filename).then(matrix => {
+          this.htmp.parse(this.filename).then(matrix => {
             self.clusteringProgress = 10
-            return workerTask.clusterTime(matrix)
+            return self.htmp.estimateClusteringLoad(matrix)
           }).then(result => {
             self.clustEst = result
             // console.log('estimated time: ' + result)
@@ -421,7 +419,7 @@
               }
             }
           }).then(() => {
-            return workerTask.cluster(self.filename, options)
+            return self.htmp.cluster(self.filename, options)
           }).then(payload => {
             // console.log(payload)
             clearInterval(self.progressInterval)
