@@ -17,3 +17,14 @@ BetaApp/src/renderer/clustering_module/demo.js
 *.a
 *.node
 *.o
+*.tlog
+*.obj
+*.pdb
+*.lib
+*.ipdb
+*.iobj
+*.lib
+*.vcxproj
+*.vcxproj.*
+*.sln
+*.exp
