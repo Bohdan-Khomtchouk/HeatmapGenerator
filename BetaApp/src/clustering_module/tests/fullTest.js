@@ -1,5 +1,5 @@
 /* eslint-disable */
-const addon = require('./build/Release/cclust')
+const addon = require('../build/Release/cclust')
 const { performance } = require('perf_hooks')
 const papa = require('papaparse')
 const fs = require('fs')

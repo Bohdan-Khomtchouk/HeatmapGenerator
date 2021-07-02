@@ -1,5 +1,5 @@
 /* eslint-disable */
-const addon = require('./build/Release/cclust')
+const addon = require('../build/Release/cclust')
 const { performance } = require('perf_hooks')
 const papa = require('papaparse')
 const fs = require('fs')
@@ -12,7 +12,7 @@ let runClustering = function (matrix) {
   // Turn matrix into CSV string
   let csv = papa.unparse(matrix)
 // Write CSV to file for C++ module
-  let filePath = './samples/file.csv'
+  let filePath = '../samples/file.csv'
   try {
     fs.writeFileSync(filePath, csv)
   } catch (error) {

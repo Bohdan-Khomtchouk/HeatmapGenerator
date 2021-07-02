@@ -20,17 +20,19 @@ function createWindow () {
    * Initial window options
    */
   mainWindow = new BrowserWindow({
-    height: 500,
-    useContentSize: true,
-    width: 700,
+    width: 1200,
+    height: 700,
     webPreferences: {
       nodeIntegration: true,
       nodeIntegrationInWorker: true,
       enableRemoteModule: true,
-      devTools: true
+      devTools: (process.env.NODE_ENV === 'development')
     },
     title: 'Heatmap Generator',
-    show: false
+    show: false,
+    resizable: false,
+    movable: true,
+    roundedCorners: true
   })
   mainWindow.loadURL(winURL)
   mainWindow.on('ready-to-show', function () {

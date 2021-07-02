@@ -607,7 +607,7 @@ napi_value Init(napi_env env, napi_value exports) {
     napi_throw_error(env, NULL, "Unable to wrap native function");
   }
 
-  status = napi_set_named_property(env, exports, "ccluster", fn);
+  status = napi_set_named_property(env, exports, "cclustcclusterer", fn);
   if (status != napi_ok) {
     napi_throw_error(env, NULL, "Unable to populate exports");
   }

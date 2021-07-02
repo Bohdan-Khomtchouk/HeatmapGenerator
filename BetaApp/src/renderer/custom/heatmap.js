@@ -159,6 +159,14 @@ export default class Heatmap {
       }
     }
 
+    this.appearance.scale = {
+      width: 30,
+      height: 200,
+      padding: {
+        left: 30
+      }
+    }
+
     // Canvas
     this.appearance.margin = {
       left: 50,
@@ -186,6 +194,7 @@ export default class Heatmap {
         heatmap: ['heatmap.width'],
         labels: ['rowAxis.labels.padding.left', 'rowAxis.labels.width'],
         axis: ['rowAxis.title.padding.left', 'rowAxis.title.font.size'],
+        scale: ['scale.padding.left', 'scale.width'],
         margin2: ['margin.right']
       }
     this.components.vertical.dictionary =

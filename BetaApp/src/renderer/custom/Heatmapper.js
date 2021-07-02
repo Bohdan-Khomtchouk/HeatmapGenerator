@@ -18,7 +18,6 @@ export default class Heatmapper {
   }
 
   // Public Functions
-
   // Data Processing
   parse (filePath) {
     return new Promise(function (resolve, reject) {
@@ -78,11 +77,10 @@ export default class Heatmapper {
       let numOfCols = matrix[1].length
       let numOfElements = numOfRows * numOfCols
       let path = require('path')
-      let process = require('electron').remote.process
+      // let process = require('electron').remote.process
       var dataPath
       if (process.env.NODE_ENV === 'production') dataPath = path.resolve(path.dirname(__dirname), '../../extraResources', 'speedTest.csv')
       else dataPath = path.resolve('src/extraResources', 'speedTest.csv')
-      console.log('dataPath: ' + dataPath)
       var fs = require('fs')
       fs.readFile(dataPath, 'utf8', (error, data) => {
         if (error) reject(error)
@@ -103,6 +101,8 @@ export default class Heatmapper {
                 time = speeds[x][2]
                 x++
               }
+              console.log(time)
+              console.log(elements)
               resolve(time)
             },
             dynamicTyping: true
@@ -120,6 +120,7 @@ export default class Heatmapper {
       self.renderHeatmapFrom(comp.direction, ndx, false)
     }, altComp)
   }
+
   loadFromFile (filePath) {
     return new Promise(function (resolve, reject) {
       var fs = require('fs')
@@ -131,6 +132,7 @@ export default class Heatmapper {
       })
     })
   }
+
   saveHeatmapFile (filePath, callback) {
     const fs = require('fs')
     const data = JSON.stringify(this.heatmapObject)
@@ -138,6 +140,7 @@ export default class Heatmapper {
       callback(err)
     })
   }
+
   exportHeatmapFile (callback) {
     // clear the interactivity UI first
     this.d3.select('.editingTray')
@@ -162,26 +165,6 @@ export default class Heatmapper {
     let filename = path.basename(fpath, path.extname(fpath))
     FileSaver.saveAs(svgBlob, filename + '.svg')
     callback(null)
-
-    // const fs = require('fs')
-    /*
-    var w = parseFloat(this.svg.attr('width'))
-    var h = parseFloat(this.svg.attr('height'))
-    var maxSize =
-    var prod = w * h
-    if (prod > maxSize) {
-      var scale = Math.sqrt(maxSize / prod)
-      w = w * scale
-      h = h * scale
-    }
-    */
-
-    /*
-    this.svgString2Image(svgString, w, h, 'png', save)
-    function save (dataBlob, filesize) {
-      var fileSaver = require('file-saver')
-      fileSaver.saveAs(dataBlob, 'visualization.png') // FileSaver.js function
-    } */
   }
 
   getSVGString (svgNode) {
@@ -251,12 +234,8 @@ export default class Heatmapper {
       element.insertBefore(styleElement, refNode)
     }
   }
-  svgString2Image (svgString, width, height, format, callback) {
-    // // console.log('svgString: ' + svgString)
-    // console.log('width: ' + width)
-    // console.log('height: ' + height)
-    // console.log('format: ' + format)
 
+  svgString2Image (svgString, width, height, format, callback) {
     format = format || 'png'
 
     var imgsrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString))) // Convert SVG string to data URL
@@ -271,18 +250,8 @@ export default class Heatmapper {
     image.onload = function () {
       context.clearRect(0, 0, width, height)
       context.drawImage(image, 0, 0, width, height)
-      // var toBlob = require('canvas-to-blob')
-      // console.log('logging canvas')
-      // console.log(canvas)
       canvas.toBlob(function (blob) {
         if (blob) {
-          // console.log('logging blob')
-          // console.log(blob)
-          // console.log('logging blob len')
-          // console.log(blob.length)
-          // var filesize = Math.round(blob.size / 1024) + ' KB'
-          // console.log('logging blob filesize')
-          // // console.log(filesize)
           if (callback) callback(blob, null)
         } else {
           // console.log('no blob')
@@ -338,18 +307,16 @@ export default class Heatmapper {
           }
         }
       }).then(function () {
-        if (ndx < 4) {
-
-        }
-      }).then(function () {
         if (ndx < 5) {
           if (horizontal) {
             self.rowAxisLabel()
+            self.colorScale()
           } else if (vertical) {
             self.colAxisLabel()
           } else {
             self.rowAxisLabel()
             self.colAxisLabel()
+            self.colorScale()
           }
         }
       }).then(function () {
@@ -371,8 +338,7 @@ export default class Heatmapper {
         self.heatmapObject = new HeatmapObject(payload)
         resolve(null)
       } else {
-        self.svg = self.d3.select(self.parent)
-          .append('svg')
+        self.svg = self.d3.select(self.parent).append('svg')
         var width = 0
         self.svg.append('g')
           .attr('class', 'rowLabels')
@@ -431,7 +397,7 @@ export default class Heatmapper {
     })
   }
 
-  // Graphical Pipeline
+  // D3.js Component Blocks
   /**
    * Establishes an SVG canvas.
    * @param {Boolean} creation Whether the heatmap is being created or updated.
@@ -848,11 +814,26 @@ export default class Heatmapper {
           .style('fill', function (d) {
             let shift = d.value - min
             let norm = shift / (max - min)
-            return self.d3.interpolateRdBu(norm)
+            let val
+            switch (self.heatmapObject.settings.colorScheme.type) {
+              case 'BrBG':
+                val = self.d3.interpolateBrBG(norm)
+                break
+              case 'PiYG':
+                val = self.d3.interpolatePiYG(norm)
+                break
+              case 'RdGy':
+                val = self.d3.interpolateRdGy(norm)
+                break
+              default:
+                val = self.d3.interpolateRdBu(norm)
+                break
+            }
+            return val
           })
           .on('mouseover', function (d) {
             self.d3.select(this).classed('cell-hover', true)
-              .style('stroke', '#F00')
+              .style('stroke', '#ff0000')
               .style('stroke-width', '0.3px')
             // Update the tooltip position and value
             self.d3.select('#d3tooltip')
@@ -873,7 +854,7 @@ export default class Heatmapper {
               .style('opacity', '0')
               .select('#value')
               .html(
-                'Cell type: ' + self.heatmapObject.data.colLabels.data[d.col] + '<br>Sample name: ' + self.heatmapObject.data.rowLabels.data[d.row] +
+                'Column: ' + self.heatmapObject.data.colLabels.data[d.col] + '<br>Row: ' + self.heatmapObject.data.rowLabels.data[d.row] +
                 '<br>Value: ' + d.value
               )
             // Show the tooltip
@@ -1206,6 +1187,7 @@ export default class Heatmapper {
    * Draws a title label above the heatmap.
    */
   titleLabel () {
+    console.log(this.heatmapObject.settings)
     var self = this
     return new Promise(function (resolve, reject) {
       if (self.heatmapObject.settings.title !== '') {
@@ -1558,6 +1540,77 @@ export default class Heatmapper {
             .attr('height', h)
         }
       } else resolve(null)
+    })
+  }
+  /*
+   * Draws color scale beneath figure
+   */
+  colorScale () {
+    var self = this
+    return new Promise(function (resolve, reject) {
+      let hSpace = self.heatmapObject.spacingTill('horizontal', 'axis') + self.heatmapObject.appearance.scale.padding.left
+      let vSpace = self.heatmapObject.spacingTill('vertical', 'tree')
+      if (self.svg.select('.colorScale').empty()) {
+        let defs = self.svg.append('defs')
+        let linearGradient = defs.append('linearGradient').attr('id', 'linear-gradient')
+        linearGradient.attr('x1', '0%').attr('y1', '0%').attr('x2', '0%').attr('y2', '100%')
+        let startColor
+        let endColor
+        switch (self.heatmapObject.settings.colorScheme.type) {
+          case 'BrBG':
+            startColor = '#543005'
+            endColor = '#003c30'
+            break
+          case 'PiYG':
+            startColor = '#8e0152'
+            endColor = '#276419'
+            break
+          case 'RdGy':
+            startColor = '#67001f'
+            endColor = '#1a1a1a'
+            break
+          default:
+            startColor = '#67001f'
+            endColor = '#053061'
+            break
+        }
+        linearGradient.append('stop').attr('offset', '0%').attr('stop-color', endColor)
+        linearGradient.append('stop').attr('offset', '100%').attr('stop-color', startColor)
+        self.svg.append('text')
+          .attr('class', 'highText')
+          .attr('text-anchor', 'middle')
+          .attr('x', hSpace + self.heatmapObject.appearance.scale.width / 2)
+          .attr('y', vSpace)
+          .text('1.0')
+        self.svg.append('text')
+          .attr('class', 'lowText')
+          .attr('text-anchor', 'middle')
+          .attr('x', hSpace + self.heatmapObject.appearance.scale.width / 2)
+          .attr('y', vSpace + 36 + self.heatmapObject.appearance.scale.height)
+          .text('-1.0')
+        self.svg.append('rect')
+          .attr('class', 'colorScale')
+          .attr('x', hSpace)
+          .attr('y', vSpace + 12)
+          .attr('width', self.heatmapObject.appearance.scale.width)
+          .attr('height', self.heatmapObject.appearance.scale.height)
+          .style('user-select', 'none')
+          .style('fill', 'url(#linear-gradient')
+        resolve(null)
+      } else {
+        self.svg.select('.colorScale')
+          .transition()
+          .attr('x', hSpace)
+          .attr('y', vSpace)
+        self.svg.select('.highText')
+          .transition()
+          .attr('x', hSpace + self.heatmapObject.appearance.scale.width / 2)
+          .attr('y', vSpace)
+        self.svg.select('.lowText')
+          .transition()
+          .attr('x', hSpace + self.heatmapObject.appearance.scale.width / 2)
+          .attr('y', self.heatmapObject.spacingTill('vertical', 'labels') - 12)
+      }
     })
   }
 }
