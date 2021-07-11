@@ -111,7 +111,7 @@ export default {
       td.style.color = '#000000'
       td.style.background = '#ffffff'
       td.style.font = '10pt sans-serif'
-      cellProperties.readOnly = true
+      // cellProperties.readOnly = true
     }
     // Change back to '/Users/ali1/Downloads/demoFile.csv' later -- \/vvv\/
     this.editor.getMatrixData(self.filePath, (data) => {

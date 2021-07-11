@@ -387,7 +387,6 @@ export default class Heatmapper {
             if (thisSize > height) height = thisSize
             this.remove() // remove them just after displaying them
           })
-
         payload.rowLabels.width = width
         payload.colLabels.height = height
         self.heatmapObject = {}
@@ -1554,6 +1553,7 @@ export default class Heatmapper {
         let defs = self.svg.append('defs')
         let linearGradient = defs.append('linearGradient').attr('id', 'linear-gradient')
         linearGradient.attr('x1', '0%').attr('y1', '0%').attr('x2', '0%').attr('y2', '100%')
+        /*
         let startColor
         let endColor
         switch (self.heatmapObject.settings.colorScheme.type) {
@@ -1574,8 +1574,20 @@ export default class Heatmapper {
             endColor = '#053061'
             break
         }
-        linearGradient.append('stop').attr('offset', '0%').attr('stop-color', endColor)
-        linearGradient.append('stop').attr('offset', '100%').attr('stop-color', startColor)
+        */
+        linearGradient.append('stop').attr('offset', '0%').attr('stop-color', '#053061')
+        linearGradient.append('stop').attr('offset', '10%').attr('stop-color', '#2166ac')
+        linearGradient.append('stop').attr('offset', '20%').attr('stop-color', '#4393c3')
+        linearGradient.append('stop').attr('offset', '30%').attr('stop-color', '#92c5de')
+        linearGradient.append('stop').attr('offset', '40%').attr('stop-color', '#d1e5f0')
+        linearGradient.append('stop').attr('offset', '50%').attr('stop-color', '#f7f7f7')
+        linearGradient.append('stop').attr('offset', '60%').attr('stop-color', '#fddbc7')
+        linearGradient.append('stop').attr('offset', '70%').attr('stop-color', '#f4a582')
+        linearGradient.append('stop').attr('offset', '80%').attr('stop-color', '#d6604d')
+        linearGradient.append('stop').attr('offset', '90%').attr('stop-color', '#b2182b')
+        linearGradient.append('stop').attr('offset', '100%').attr('stop-color', '#67001f')
+
+        /*
         self.svg.append('text')
           .attr('class', 'highText')
           .attr('text-anchor', 'middle')
@@ -1588,6 +1600,7 @@ export default class Heatmapper {
           .attr('x', hSpace + self.heatmapObject.appearance.scale.width / 2)
           .attr('y', vSpace + 36 + self.heatmapObject.appearance.scale.height)
           .text('-1.0')
+         */
         self.svg.append('rect')
           .attr('class', 'colorScale')
           .attr('x', hSpace)
@@ -1602,6 +1615,7 @@ export default class Heatmapper {
           .transition()
           .attr('x', hSpace)
           .attr('y', vSpace)
+        /*
         self.svg.select('.highText')
           .transition()
           .attr('x', hSpace + self.heatmapObject.appearance.scale.width / 2)
@@ -1610,6 +1624,7 @@ export default class Heatmapper {
           .transition()
           .attr('x', hSpace + self.heatmapObject.appearance.scale.width / 2)
           .attr('y', self.heatmapObject.spacingTill('vertical', 'labels') - 12)
+          */
       }
     })
   }
